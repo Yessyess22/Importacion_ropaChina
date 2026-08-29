@@ -1,0 +1,139 @@
+# Trendy Import SRL
+
+Sistema web de importación mayorista de ropa de tendencia juvenil femenina.
+Integra el flujo de **importación → gestión aduanera → costeo → inventario →
+catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
+talla y color, y la regla de cantidad mínima de compra por modelo.
+
+> **Estado actual: Fase 1 — Arquitectura y configuración inicial.**
+> No se han implementado todavía los módulos de negocio (catálogo,
+> importaciones, pedidos, etc.). Esta fase solo deja lista la base técnica.
+
+## Stack tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| Backend | Python 3.12, Django 5.2 LTS, Django REST Framework |
+| Base de datos | PostgreSQL 16 |
+| Frontend | React 19, TypeScript, Vite |
+| Estilos / UI | Tailwind CSS v4, shadcn/ui |
+| Infraestructura | Docker, Docker Compose, Nginx |
+| Testing (fases futuras) | Pytest / Django Test, Playwright |
+
+## Arquitectura
+
+```
+Usuario → Nginx (:80) → React (Vite, /)      — interfaz de usuario
+                       → Django API (/api/)   — lógica de negocio, REST
+                                    ↓
+                               PostgreSQL     — persistencia
+```
+
+Arquitectura desacoplada: React y Django son aplicaciones independientes que
+se comunican vía HTTP/REST. Nginx es el único punto de entrada expuesto al
+usuario. Los contenedores se comunican entre sí por nombre de servicio Docker
+(`backend`, `frontend`, `postgres`), nunca por IP.
+
+## Estructura de carpetas
+
+```
+trendy-import/
+├── backend/            # Proyecto Django (API REST)
+│   ├── config/         # settings (base/development/production), urls, wsgi/asgi
+│   └── apps/           # apps de dominio (se agregarán en fases futuras)
+├── frontend/           # Proyecto React + TypeScript + Vite
+│   └── src/
+│       ├── components/ layouts/ pages/ hooks/ services/ types/ utils/ lib/
+├── nginx/              # nginx.conf (reverse proxy)
+├── docker/             # Dockerfiles de backend y frontend
+├── tests/              # Pruebas E2E (Playwright, fase futura)
+├── docker-compose.yml
+├── .env / .env.example
+└── README.md
+```
+
+## Requisitos para ejecutar
+
+- Docker y Docker Compose
+- (Opcional para desarrollo fuera de Docker) Node.js 22 y Python 3.12
+
+## Variables de entorno
+
+Copiar `.env.example` a `.env` y completar los valores:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Descripción |
+|---|---|
+| `DJANGO_SECRET_KEY` | Clave secreta de Django (generar una propia, no reutilizar la de ejemplo) |
+| `DJANGO_DEBUG` | `True` en desarrollo, `False` en producción |
+| `DJANGO_ALLOWED_HOSTS` | Hosts permitidos, separados por coma |
+| `DATABASE_NAME/USER/PASSWORD/HOST/PORT` | Conexión de Django a PostgreSQL |
+| `POSTGRES_DB/USER/PASSWORD` | Inicialización del contenedor de PostgreSQL (deben coincidir con `DATABASE_*`) |
+| `CORS_ALLOWED_ORIGINS` | Orígenes autorizados a consumir la API |
+| `VITE_API_URL` | URL base que usará el frontend para llamar a la API |
+
+**Nunca** se suben credenciales reales a Git: `.env` está en `.gitignore`.
+
+## Comandos principales
+
+```bash
+# Levantar todos los servicios (build + up)
+docker compose up --build
+
+# Levantar en segundo plano
+docker compose up -d
+
+# Ver logs de un servicio
+docker compose logs -f backend
+
+# Ejecutar comandos de Django dentro del contenedor
+docker compose exec backend python manage.py <comando>
+
+# Detener y eliminar contenedores
+docker compose down
+```
+
+## Servicios Docker y puertos
+
+| Servicio | Puerto host | Expuesto al host | Rol |
+|---|---|---|---|
+| `nginx` | 80 | Sí | Punto de entrada único |
+| `frontend` | 5173 | Sí (conveniencia de desarrollo) | Vite dev server (HMR) |
+| `backend` | 8000 | Sí (conveniencia de desarrollo, admin/DRF) | API Django |
+| `postgres` | — | **No** | Base de datos (solo accesible dentro de la red Docker) |
+
+En un entorno de producción futuro, únicamente el puerto 80/443 de Nginx
+debería quedar expuesto.
+
+## Flujo de arranque
+
+1. Docker inicia `postgres` y espera a que su healthcheck (`pg_isready`) esté en verde.
+2. `backend` espera a que `postgres` esté saludable, aplica migraciones automáticamente (`entrypoint.sh`) y levanta `runserver`.
+3. `frontend` levanta el servidor de desarrollo de Vite.
+4. `nginx` inicia y enruta `/` → `frontend`, `/api/` y `/admin/` → `backend`.
+5. El sistema queda disponible en `http://localhost/`.
+
+## Verificación rápida
+
+- `http://localhost/` → interfaz de React, con un panel que confirma la conexión al backend (`/api/health/`).
+- `http://localhost/api/health/` → `{"status": "ok", "service": "trendy-import-backend"}`.
+- `http://localhost/admin/` → panel de administración de Django.
+
+## Estado actual del proyecto
+
+- [x] Arquitectura y estructura de carpetas
+- [x] Docker Compose con `postgres`, `backend`, `frontend`, `nginx`
+- [x] Django + DRF conectado a PostgreSQL
+- [x] React + TypeScript + Vite + Tailwind v4 + shadcn/ui
+- [x] Nginx enrutando frontend y backend
+- [ ] Modelos de dominio (Fase 2)
+- [ ] Autenticación y roles completos (fase futura)
+- [ ] Módulos de negocio: catálogo, importaciones, costeo, stock, pedidos, reportes (fases futuras)
+
+## Fases futuras
+
+- **Fase 2:** Diseño de base de datos y modelos Django (Prenda, Variante, Proveedor, Operación de Importación, Documento, Costeo, Tributo, Tipo de Cambio, Stock, Pedido Mayorista, Cliente Mayorista, Bitácora).
+- **Fase 3+:** Endpoints REST por dominio, autenticación y roles, lógica de negocio (CIF, tributos, cantidad mínima de compra), catálogo mayorista, pedidos, reportes, pruebas automatizadas (Pytest/Django Test, Playwright).

@@ -1,0 +1,40 @@
+# Entorno
+.env
+*.env
+!.env.example
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+.venv/
+venv/
+env/
+.pytest_cache/
+staticfiles/
+media/
+*.log
+
+# Node / React
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+
+# Testing / coverage
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
