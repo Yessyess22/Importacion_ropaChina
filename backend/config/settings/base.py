@@ -106,7 +106,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "apps.usuarios.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -114,3 +114,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+# Necesario porque la autenticación es por cookie de sesión: el navegador
+# solo la envía/acepta en peticiones cross-origin si el servidor lo permite
+# explícitamente. La lista de orígenes sigue restringida por
+# CORS_ALLOWED_ORIGINS (nunca se usa CORS_ALLOW_ALL_ORIGINS).
+CORS_ALLOW_CREDENTIALS = True

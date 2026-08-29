@@ -5,12 +5,13 @@ Integra el flujo de **importación → gestión aduanera → costeo → inventar
 catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
 talla y color, y la regla de cantidad mínima de compra por modelo.
 
-> **Estado actual: Fase 2 — Base de datos y modelos Django.**
-> El esquema de datos del dominio (catálogo, terceros, importaciones,
-> documentos, costeo, inventario, pedidos, usuarios/roles y auditoría) está
-> modelado, migrado a PostgreSQL y probado. Todavía no hay API REST,
-> autenticación de roles ni frontend de negocio (ver [docs/database.md](docs/database.md)
-> y "Fases futuras" más abajo).
+> **Estado actual: Fase 3 — Autenticación, usuarios, roles y permisos.**
+> Sobre el esquema de datos de la Fase 2 ([docs/database.md](docs/database.md))
+> se implementó autenticación por sesión (Django + DRF), los cinco roles de
+> negocio, permisos por rol en el backend y protección de rutas en el
+> frontend (ver [docs/authentication.md](docs/authentication.md)). Todavía no
+> hay endpoints REST de los módulos de negocio (catálogo, importaciones,
+> pedidos, etc.); eso corresponde a la Fase 4 (ver "Fases futuras" más abajo).
 
 ## Stack tecnológico
 
@@ -44,7 +45,7 @@ trendy-import/
 ├── backend/            # Proyecto Django (API REST)
 │   ├── config/         # settings (base/development/production), urls, wsgi/asgi
 │   └── apps/           # apps de dominio (ver docs/database.md)
-│       ├── usuarios/       # Usuario (AbstractUser), Rol
+│       ├── usuarios/       # Usuario (AbstractUser), Rol, auth (login/logout/me), permisos por rol
 │       ├── terceros/       # Tercero (abstracta), Proveedor, ClienteMayorista, AgenteAduanal, Transportista
 │       ├── catalogo/       # Prenda, VarianteProducto
 │       ├── importaciones/  # OperacionImportacion, DetalleImportacion
@@ -56,7 +57,13 @@ trendy-import/
 │       └── auditoria/      # Bitacora
 ├── frontend/           # Proyecto React + TypeScript + Vite
 │   └── src/
-│       ├── components/ layouts/ pages/ hooks/ services/ types/ utils/ lib/
+│       ├── context/        # AuthContext (usuario, rol, login, logout)
+│       ├── hooks/           # useAuth
+│       ├── services/        # authService (login/logout/me)
+│       ├── components/      # ProtectedRoute, ui/ (shadcn)
+│       ├── pages/            # Login
+│       ├── types/            # auth.ts
+│       └── layouts/ utils/ lib/
 ├── nginx/              # nginx.conf (reverse proxy)
 ├── docker/             # Dockerfiles de backend y frontend
 ├── tests/              # Pruebas E2E (Playwright, fase futura)
@@ -85,8 +92,11 @@ cp .env.example .env
 | `DJANGO_ALLOWED_HOSTS` | Hosts permitidos, separados por coma |
 | `DATABASE_NAME/USER/PASSWORD/HOST/PORT` | Conexión de Django a PostgreSQL |
 | `POSTGRES_DB/USER/PASSWORD` | Inicialización del contenedor de PostgreSQL (deben coincidir con `DATABASE_*`) |
-| `CORS_ALLOWED_ORIGINS` | Orígenes autorizados a consumir la API |
+| `CORS_ALLOWED_ORIGINS` | Orígenes autorizados a consumir la API con credenciales (cookies) |
 | `VITE_API_URL` | URL base que usará el frontend para llamar a la API |
+| `DJANGO_DEV_ADMIN_PASSWORD` | (Opcional) contraseña fija para el usuario `admin` que crea `seed_dev_data`; si no se define, se genera una aleatoria |
+
+Ver [docs/authentication.md](docs/authentication.md) para el detalle de autenticación, roles y permisos.
 
 **Nunca** se suben credenciales reales a Git: `.env` está en `.gitignore`.
 
@@ -145,9 +155,10 @@ debería quedar expuesto.
 
 ## Verificación rápida
 
-- `http://localhost/` → interfaz de React, con un panel que confirma la conexión al backend (`/api/health/`).
+- `http://localhost/` → interfaz de React; sin sesión redirige a `/login`.
 - `http://localhost/api/health/` → `{"status": "ok", "service": "trendy-import-backend"}`.
-- `http://localhost/admin/` → panel de administración de Django.
+- `http://localhost/admin/` → panel de administración de Django (usuarios, roles, permisos).
+- Autenticación: ver [docs/authentication.md](docs/authentication.md) para el flujo completo de login/logout/`/me` y cómo probarlo.
 
 ## Estado actual del proyecto
 
@@ -157,10 +168,9 @@ debería quedar expuesto.
 - [x] React + TypeScript + Vite + Tailwind v4 + shadcn/ui
 - [x] Nginx enrutando frontend y backend
 - [x] Modelos de dominio, migraciones, Django Admin y pruebas básicas (Fase 2 — ver [docs/database.md](docs/database.md))
-- [ ] Autenticación, roles y permisos completos (Fase 3)
+- [x] Autenticación por sesión, roles y permisos por rol en el backend, rutas protegidas en el frontend (Fase 3 — ver [docs/authentication.md](docs/authentication.md))
 - [ ] Endpoints REST y lógica de negocio: CIF, tributos, cantidad mínima de compra, catálogo mayorista, pedidos, reportes (fases futuras)
 
 ## Fases futuras
 
-- **Fase 3:** Autenticación, usuarios, roles y permisos (endpoints de login, mapeo de `Rol` a grupos/permisos de Django, permisos de DRF por actor).
-- **Fase 4+:** Endpoints REST por dominio, servicios de negocio (cálculo de CIF, tributos, actualización de stock, validación de cantidad mínima), catálogo mayorista, pedidos, reportes, frontend de negocio, pruebas E2E (Playwright).
+- **Fase 4+:** Endpoints REST por dominio, servicios de negocio (cálculo de CIF, tributos, actualización de stock, validación de cantidad mínima), catálogo mayorista, pedidos, reportes, frontend de negocio, pruebas E2E (Playwright). Los permisos por rol de estos endpoints reutilizarán `HasRole` (ver [docs/authentication.md](docs/authentication.md)).
