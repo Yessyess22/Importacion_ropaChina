@@ -1,0 +1,212 @@
+{
+  "info": {
+    "name": "Trendy Import API (Fase 4)",
+    "description": "Colección de referencia para /api/v1/ y /api/auth/. Autenticación por sesión (cookie), no por token: hay que ejecutar 'Login' primero en el mismo Postman Runner/cookie jar para que las peticiones siguientes usen la sesión. No incluye credenciales reales: completar `usuario`/`password` como variables de entorno propias.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Adjunta X-CSRFToken automáticamente en escrituras, leyendo la cookie",
+          "// 'csrftoken' que fija /api/auth/me/ o /api/auth/login/ (ver docs/authentication.md).",
+          "if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(pm.request.method)) {",
+          "    const csrftoken = pm.cookies.get('csrftoken');",
+          "    if (csrftoken) {",
+          "        pm.request.headers.upsert({ key: 'X-CSRFToken', value: csrftoken });",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost" },
+    { "key": "usuario", "value": "" },
+    { "key": "password", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"{{usuario}}\", \"password\": \"{{password}}\"}"
+            },
+            "url": "{{base_url}}/api/auth/login/"
+          }
+        },
+        {
+          "name": "Me",
+          "request": { "method": "GET", "url": "{{base_url}}/api/auth/me/" }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "url": "{{base_url}}/api/auth/logout/" }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "item": [
+        { "name": "Listar prendas", "request": { "method": "GET", "url": "{{base_url}}/api/v1/prendas/" } },
+        {
+          "name": "Crear prenda",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"codigo_modelo\": \"VC-900\", \"nombre\": \"Vestido Demo\", \"categoria\": \"Vestidos\", \"temporada\": \"Verano\"}"
+            },
+            "url": "{{base_url}}/api/v1/prendas/"
+          }
+        },
+        { "name": "Listar variantes", "request": { "method": "GET", "url": "{{base_url}}/api/v1/variantes/" } },
+        {
+          "name": "Crear variante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"prenda\": 1, \"talla\": \"M\", \"color\": \"Rojo\", \"precio_unitario\": \"120.00\"}"
+            },
+            "url": "{{base_url}}/api/v1/variantes/"
+          }
+        },
+        {
+          "name": "Publicar variante",
+          "request": { "method": "POST", "url": "{{base_url}}/api/v1/variantes/1/publicar/" }
+        }
+      ]
+    },
+    {
+      "name": "Terceros",
+      "item": [
+        { "name": "Listar proveedores", "request": { "method": "GET", "url": "{{base_url}}/api/v1/proveedores/" } },
+        { "name": "Listar clientes mayoristas", "request": { "method": "GET", "url": "{{base_url}}/api/v1/clientes/" } }
+      ]
+    },
+    {
+      "name": "Importaciones",
+      "item": [
+        { "name": "Listar importaciones", "request": { "method": "GET", "url": "{{base_url}}/api/v1/importaciones/" } },
+        {
+          "name": "Crear importación (CIF se calcula en backend)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"codigo_unico\": \"OP-DEMO-1\", \"proveedor\": 1, \"fecha_registro\": \"2026-08-01\", \"valor_fob\": \"1000.00\", \"valor_flete\": \"200.00\", \"valor_seguro\": \"100.00\"}"
+            },
+            "url": "{{base_url}}/api/v1/importaciones/"
+          }
+        },
+        {
+          "name": "Actualizar estado de importación",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"estado\": \"EN_TRANSITO\"}" },
+            "url": "{{base_url}}/api/v1/importaciones/1/actualizar-estado/"
+          }
+        },
+        {
+          "name": "Calcular costeo",
+          "request": { "method": "POST", "url": "{{base_url}}/api/v1/importaciones/1/calcular-costeo/" }
+        }
+      ]
+    },
+    {
+      "name": "Documentos",
+      "item": [
+        { "name": "Listar documentos de una operación", "request": { "method": "GET", "url": "{{base_url}}/api/v1/documentos/?operacion=1" } }
+      ]
+    },
+    {
+      "name": "Costeo",
+      "item": [
+        { "name": "Listar costeos", "request": { "method": "GET", "url": "{{base_url}}/api/v1/costeos/" } },
+        {
+          "name": "Registrar tributo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"costeo\": 1, \"tipo\": \"ARANCEL\", \"base_imponible\": \"1300.00\", \"porcentaje\": \"10.00\"}"
+            },
+            "url": "{{base_url}}/api/v1/tributos/"
+          }
+        },
+        {
+          "name": "Registrar tipo de cambio del día",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"fecha\": \"2026-08-29\", \"valor\": \"6.9600\"}" },
+            "url": "{{base_url}}/api/v1/tipo-cambio/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventario",
+      "item": [
+        { "name": "Listar movimientos", "request": { "method": "GET", "url": "{{base_url}}/api/v1/movimientos-inventario/" } },
+        {
+          "name": "Registrar entrada manual",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"variante\": 1, \"cantidad\": 10, \"observacion\": \"Ajuste inicial\"}" },
+            "url": "{{base_url}}/api/v1/movimientos-inventario/entrada/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        { "name": "Listar pedidos (propios o todos según rol)", "request": { "method": "GET", "url": "{{base_url}}/api/v1/pedidos/" } },
+        {
+          "name": "Crear pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"detalles\": [{\"variante\": 1, \"cantidad\": 6}]}"
+            },
+            "url": "{{base_url}}/api/v1/pedidos/"
+          }
+        },
+        {
+          "name": "Actualizar estado de pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"estado\": \"CONFIRMADO\"}" },
+            "url": "{{base_url}}/api/v1/pedidos/1/actualizar-estado/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        { "name": "Reporte de importaciones por estado", "request": { "method": "GET", "url": "{{base_url}}/api/v1/reportes/importaciones/" } },
+        { "name": "Reporte de pedidos por estado", "request": { "method": "GET", "url": "{{base_url}}/api/v1/reportes/pedidos/" } }
+      ]
+    }
+  ]
+}

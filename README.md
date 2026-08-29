@@ -5,13 +5,15 @@ Integra el flujo de **importación → gestión aduanera → costeo → inventar
 catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
 talla y color, y la regla de cantidad mínima de compra por modelo.
 
-> **Estado actual: Fase 3 — Autenticación, usuarios, roles y permisos.**
-> Sobre el esquema de datos de la Fase 2 ([docs/database.md](docs/database.md))
-> se implementó autenticación por sesión (Django + DRF), los cinco roles de
-> negocio, permisos por rol en el backend y protección de rutas en el
-> frontend (ver [docs/authentication.md](docs/authentication.md)). Todavía no
-> hay endpoints REST de los módulos de negocio (catálogo, importaciones,
-> pedidos, etc.); eso corresponde a la Fase 4 (ver "Fases futuras" más abajo).
+> **Estado actual: Fase 4 — API REST del sistema.**
+> Sobre la autenticación de la Fase 3 ([docs/authentication.md](docs/authentication.md))
+> se implementó la API REST de negocio bajo `/api/v1/` (catálogo,
+> proveedores/clientes, importaciones con cálculo de CIF en backend,
+> documentos, costeo/tributos/tipo de cambio, inventario, pedidos con
+> validación de cantidad mínima y reserva de stock, y reportes), con
+> paginación, filtros, permisos por rol y documentación OpenAPI (ver
+> [docs/api.md](docs/api.md)). El frontend de negocio (más allá del login)
+> corresponde a fases futuras.
 
 ## Stack tecnológico
 
@@ -43,29 +45,30 @@ usuario. Los contenedores se comunican entre sí por nombre de servicio Docker
 ```
 trendy-import/
 ├── backend/            # Proyecto Django (API REST)
-│   ├── config/         # settings (base/development/production), urls, wsgi/asgi
-│   └── apps/           # apps de dominio (ver docs/database.md)
+│   ├── config/         # settings, urls raíz + urls_v1.py, pagination.py, exceptions.py
+│   └── apps/           # apps de dominio (ver docs/database.md y docs/api.md)
 │       ├── usuarios/       # Usuario (AbstractUser), Rol, auth (login/logout/me), permisos por rol
-│       ├── terceros/       # Tercero (abstracta), Proveedor, ClienteMayorista, AgenteAduanal, Transportista
-│       ├── catalogo/       # Prenda, VarianteProducto
-│       ├── importaciones/  # OperacionImportacion, DetalleImportacion
-│       ├── documentos/     # Documento
-│       ├── costeo/         # Costeo, Tributo, TipoCambio
-│       ├── inventario/     # MovimientoInventario
-│       ├── pedidos/        # PedidoMayorista, DetallePedido
-│       ├── reportes/       # sin modelos aún (fase futura)
-│       └── auditoria/      # Bitacora
+│       ├── terceros/       # Proveedor, ClienteMayorista, AgenteAduanal, Transportista + API
+│       ├── catalogo/       # Prenda, VarianteProducto + API (RF-01, RF-08, RF-14)
+│       ├── importaciones/  # OperacionImportacion, DetalleImportacion + API + cálculo de CIF (RF-03/04)
+│       ├── documentos/     # Documento + API (RF-06)
+│       ├── costeo/         # Costeo, Tributo, TipoCambio + API (RF-04/05/10)
+│       ├── inventario/     # MovimientoInventario + servicio de stock atómico (RF-09)
+│       ├── pedidos/        # PedidoMayorista, DetallePedido + API, mínimo por modelo y reserva de stock (RF-15/27)
+│       ├── reportes/       # Endpoints de agregación de solo lectura (RF-11)
+│       └── auditoria/      # Bitacora + servicio de registro (sección 39)
 ├── frontend/           # Proyecto React + TypeScript + Vite
 │   └── src/
 │       ├── context/        # AuthContext (usuario, rol, login, logout)
 │       ├── hooks/           # useAuth
-│       ├── services/        # authService (login/logout/me)
+│       ├── services/        # authService (login/logout/me), api.ts (cliente HTTP /api/v1/)
 │       ├── components/      # ProtectedRoute, ui/ (shadcn)
 │       ├── pages/            # Login
-│       ├── types/            # auth.ts
+│       ├── types/            # auth.ts, api.ts, catalogo.ts, terceros.ts, importaciones.ts, costeo.ts, pedidos.ts
 │       └── layouts/ utils/ lib/
 ├── nginx/              # nginx.conf (reverse proxy)
 ├── docker/             # Dockerfiles de backend y frontend
+├── docs/               # database.md, authentication.md, api.md, postman/
 ├── tests/              # Pruebas E2E (Playwright, fase futura)
 ├── docker-compose.yml
 ├── .env / .env.example
@@ -157,8 +160,11 @@ debería quedar expuesto.
 
 - `http://localhost/` → interfaz de React; sin sesión redirige a `/login`.
 - `http://localhost/api/health/` → `{"status": "ok", "service": "trendy-import-backend"}`.
+- `http://localhost/api/v1/prendas/` → catálogo (requiere sesión iniciada).
+- `http://localhost/api/docs/` → documentación interactiva (Swagger UI) de toda la API v1.
 - `http://localhost/admin/` → panel de administración de Django (usuarios, roles, permisos).
 - Autenticación: ver [docs/authentication.md](docs/authentication.md) para el flujo completo de login/logout/`/me` y cómo probarlo.
+- API de negocio: ver [docs/api.md](docs/api.md) para endpoints, permisos por rol, filtros/paginación y las reglas de negocio que siempre valida el backend (CIF, tributos, cantidad mínima, reserva de stock).
 
 ## Estado actual del proyecto
 
@@ -169,8 +175,9 @@ debería quedar expuesto.
 - [x] Nginx enrutando frontend y backend
 - [x] Modelos de dominio, migraciones, Django Admin y pruebas básicas (Fase 2 — ver [docs/database.md](docs/database.md))
 - [x] Autenticación por sesión, roles y permisos por rol en el backend, rutas protegidas en el frontend (Fase 3 — ver [docs/authentication.md](docs/authentication.md))
-- [ ] Endpoints REST y lógica de negocio: CIF, tributos, cantidad mínima de compra, catálogo mayorista, pedidos, reportes (fases futuras)
+- [x] API REST `/api/v1/` para catálogo, terceros, importaciones (con CIF calculado en backend), documentos, costeo/tributos/tipo de cambio, inventario, pedidos (mínimo por modelo + reserva de stock) y reportes; paginación, filtros, permisos por rol y documentación OpenAPI (Fase 4 — ver [docs/api.md](docs/api.md))
+- [ ] Frontend de negocio completo (más allá del login) y pruebas E2E con Playwright (fases futuras)
 
 ## Fases futuras
 
-- **Fase 4+:** Endpoints REST por dominio, servicios de negocio (cálculo de CIF, tributos, actualización de stock, validación de cantidad mínima), catálogo mayorista, pedidos, reportes, frontend de negocio, pruebas E2E (Playwright). Los permisos por rol de estos endpoints reutilizarán `HasRole` (ver [docs/authentication.md](docs/authentication.md)).
+- **Fase 5+:** Frontend de negocio (catálogo, importaciones, pedidos, etc. consumiendo `frontend/src/services/api.ts`), pruebas E2E (Playwright), throttling/rate limiting para producción, notificaciones reales de estado de pedido.

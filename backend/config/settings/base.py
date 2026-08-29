@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     # Terceros
     "rest_framework",
     "corsheaders",
+    "django_filters",
+    "drf_spectacular",
     # Apps propias del dominio
     "apps.usuarios",
     "apps.terceros",
@@ -111,6 +113,25 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_PAGINATION_CLASS": "config.pagination.StandardResultsSetPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Trendy Import API",
+    "DESCRIPTION": (
+        "API REST del sistema de importación mayorista de ropa de "
+        "tendencia juvenil femenina (Fase 4)."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
