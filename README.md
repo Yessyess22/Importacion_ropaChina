@@ -5,9 +5,12 @@ Integra el flujo de **importación → gestión aduanera → costeo → inventar
 catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
 talla y color, y la regla de cantidad mínima de compra por modelo.
 
-> **Estado actual: Fase 1 — Arquitectura y configuración inicial.**
-> No se han implementado todavía los módulos de negocio (catálogo,
-> importaciones, pedidos, etc.). Esta fase solo deja lista la base técnica.
+> **Estado actual: Fase 2 — Base de datos y modelos Django.**
+> El esquema de datos del dominio (catálogo, terceros, importaciones,
+> documentos, costeo, inventario, pedidos, usuarios/roles y auditoría) está
+> modelado, migrado a PostgreSQL y probado. Todavía no hay API REST,
+> autenticación de roles ni frontend de negocio (ver [docs/database.md](docs/database.md)
+> y "Fases futuras" más abajo).
 
 ## Stack tecnológico
 
@@ -40,7 +43,17 @@ usuario. Los contenedores se comunican entre sí por nombre de servicio Docker
 trendy-import/
 ├── backend/            # Proyecto Django (API REST)
 │   ├── config/         # settings (base/development/production), urls, wsgi/asgi
-│   └── apps/           # apps de dominio (se agregarán en fases futuras)
+│   └── apps/           # apps de dominio (ver docs/database.md)
+│       ├── usuarios/       # Usuario (AbstractUser), Rol
+│       ├── terceros/       # Tercero (abstracta), Proveedor, ClienteMayorista, AgenteAduanal, Transportista
+│       ├── catalogo/       # Prenda, VarianteProducto
+│       ├── importaciones/  # OperacionImportacion, DetalleImportacion
+│       ├── documentos/     # Documento
+│       ├── costeo/         # Costeo, Tributo, TipoCambio
+│       ├── inventario/     # MovimientoInventario
+│       ├── pedidos/        # PedidoMayorista, DetallePedido
+│       ├── reportes/       # sin modelos aún (fase futura)
+│       └── auditoria/      # Bitacora
 ├── frontend/           # Proyecto React + TypeScript + Vite
 │   └── src/
 │       ├── components/ layouts/ pages/ hooks/ services/ types/ utils/ lib/
@@ -92,6 +105,20 @@ docker compose logs -f backend
 # Ejecutar comandos de Django dentro del contenedor
 docker compose exec backend python manage.py <comando>
 
+# Crear/aplicar migraciones (el entrypoint ya migra automáticamente al levantar)
+docker compose exec backend python manage.py makemigrations
+docker compose exec backend python manage.py migrate
+
+# Ejecutar la suite de pruebas de modelos
+docker compose exec backend python manage.py test apps
+
+# Cargar datos mínimos de desarrollo (roles, admin de prueba, ejemplo de catálogo)
+# Solo funciona con DJANGO_DEBUG=True; nunca usar en producción.
+docker compose exec backend python manage.py seed_dev_data
+
+# Crear un superusuario manualmente
+docker compose exec backend python manage.py createsuperuser
+
 # Detener y eliminar contenedores
 docker compose down
 ```
@@ -129,11 +156,11 @@ debería quedar expuesto.
 - [x] Django + DRF conectado a PostgreSQL
 - [x] React + TypeScript + Vite + Tailwind v4 + shadcn/ui
 - [x] Nginx enrutando frontend y backend
-- [ ] Modelos de dominio (Fase 2)
-- [ ] Autenticación y roles completos (fase futura)
-- [ ] Módulos de negocio: catálogo, importaciones, costeo, stock, pedidos, reportes (fases futuras)
+- [x] Modelos de dominio, migraciones, Django Admin y pruebas básicas (Fase 2 — ver [docs/database.md](docs/database.md))
+- [ ] Autenticación, roles y permisos completos (Fase 3)
+- [ ] Endpoints REST y lógica de negocio: CIF, tributos, cantidad mínima de compra, catálogo mayorista, pedidos, reportes (fases futuras)
 
 ## Fases futuras
 
-- **Fase 2:** Diseño de base de datos y modelos Django (Prenda, Variante, Proveedor, Operación de Importación, Documento, Costeo, Tributo, Tipo de Cambio, Stock, Pedido Mayorista, Cliente Mayorista, Bitácora).
-- **Fase 3+:** Endpoints REST por dominio, autenticación y roles, lógica de negocio (CIF, tributos, cantidad mínima de compra), catálogo mayorista, pedidos, reportes, pruebas automatizadas (Pytest/Django Test, Playwright).
+- **Fase 3:** Autenticación, usuarios, roles y permisos (endpoints de login, mapeo de `Rol` a grupos/permisos de Django, permisos de DRF por actor).
+- **Fase 4+:** Endpoints REST por dominio, servicios de negocio (cálculo de CIF, tributos, actualización de stock, validación de cantidad mínima), catálogo mayorista, pedidos, reportes, frontend de negocio, pruebas E2E (Playwright).

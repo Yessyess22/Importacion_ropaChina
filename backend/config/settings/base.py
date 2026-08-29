@@ -26,8 +26,20 @@ INSTALLED_APPS = [
     # Terceros
     "rest_framework",
     "corsheaders",
-    # Apps propias del dominio (se agregarán en fases futuras)
+    # Apps propias del dominio
+    "apps.usuarios",
+    "apps.terceros",
+    "apps.catalogo",
+    "apps.importaciones",
+    "apps.documentos",
+    "apps.costeo",
+    "apps.inventario",
+    "apps.pedidos",
+    "apps.reportes",
+    "apps.auditoria",
 ]
+
+AUTH_USER_MODEL = "usuarios.Usuario"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
