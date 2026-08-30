@@ -11,18 +11,11 @@
 
 ### 🔴 Pendiente
 
-| ID | Tarea | Responsable | Dependencias | SP |
-|----|-------|-------------|-------------|-----|
-| **S1-T09** | E2E con Playwright: login válido → dashboard, login inválido → error Toast, logout → `/login`, redirección de rol no autorizado | Ambos | S1-T03 ✅ | 3 |
-| **S1-T10** | Tests `apps/auditoria/tests.py`: crear importación → verificar registro Bitacora, snapshot de usuario_repr | Oscar | Ninguna (backend) | 2 |
+*(Sprint 1 completo — ver Sprint 2 en planificación)*
 
 ### 🟡 En progreso
 
-*(Mover tareas aquí cuando se inicia el trabajo — incluir fecha y rama de Git)*
-
-| ID | Tarea | Responsable | Rama | Fecha inicio |
-|----|-------|-------------|------|-------------|
-| — | — | — | — | — |
+*(Ninguna — Sprint 1 cerrado)*
 
 ### ✅ Completado
 
@@ -36,6 +29,8 @@
 | **S1-T06** | Vista `/proveedores` — DataTable + modal alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
 | **S1-T07** | Vista `/clientes-mayoristas` — DataTable + modal con `pedido_minimo_modelo` validado (min=1) | Oscar | 2026-08-30 | `main` |
 | **S1-T08** | Vista `/agentes-aduanales` — DataTable + modal de alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
+| **S1-T09** | E2E Playwright: login válido → dashboard, credenciales inválidas → Toast, logout con AlertDialog, protección de ruta por rol | Oscar | 2026-08-30 | `main` |
+| **S1-T10** | Tests unitarios `apps/auditoria/tests.py` — 7/7 PASSED: creación, SET_NULL, GenericFK | Oscar | 2026-08-30 | `main` |
 
 ---
 

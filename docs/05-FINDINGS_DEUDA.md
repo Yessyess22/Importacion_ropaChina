@@ -75,15 +75,9 @@
 | **Detectado** | 2026-08-30 |
 | **Sprint objetivo** | Sprint 1 — Tarea S1-T10 |
 | **Propietario** | Oscar |
-| **Estado** | 🔴 Abierto |
+| **Estado** | ✅ Resuelto (2026-08-30) |
 
-**Descripción:** `backend/apps/auditoria/tests.py` contiene 3 líneas (solo import vacío). El servicio `auditoria_services.registrar()` es llamado explícitamente desde `importaciones/services.py` y `pedidos/services.py`, pero no tiene ningún test que verifique:
-- Que el registro de `Bitacora` se crea correctamente al crear una importación.
-- Que el `usuario_repr` se guarda como snapshot del nombre de usuario.
-- Que el `detalle` JSON contiene los campos esperados.
-- Que el registro persiste aunque el usuario sea eliminado (SET_NULL).
-
-**Impacto:** Si se introduce un bug en `registrar()`, los tests de integración de otras apps no lo detectarán directamente.
+**Resolución aplicada:** `backend/apps/auditoria/tests.py` reescrito con 3 clases `TestCase` y 7 tests: creación correcta de registro, invariante SET_NULL (usuario FK queda NULL pero `usuario_repr` persiste), y resolución de `GenericForeignKey` via ContentTypes. `backend/pytest.ini` + `backend/conftest.py` añadidos para soporte `pytest-django`. Resultado: **7/7 PASSED en 3.20s**.
 
 ---
 
@@ -130,10 +124,10 @@
 | Campo | Valor |
 |-------|-------|
 | **Severidad** | 🟢 Bajo |
-| **Sprint objetivo** | Sprint 4 |
-| **Estado** | 🔴 Abierto |
+| **Sprint objetivo** | Sprint 1 — Tarea S1-T09 |
+| **Estado** | ✅ Resuelto (2026-08-30) |
 
-**Descripción:** La carpeta `tests/` en la raíz del proyecto contiene solo un `README.md`. Los tests E2E de Playwright deben ubicarse aquí según la arquitectura definida.
+**Resolución aplicada:** `tests/auth.spec.ts` creado con 4 escenarios Playwright (login exitoso, credenciales inválidas + Toast Sonner, logout con `AlertDialog`, protección de ruta por rol). `playwright.config.ts` en raíz con `baseURL: http://localhost` y Chromium como motor. Comando de ejecución: `npx playwright test tests/auth.spec.ts` con stack Docker activo.
 
 ---
 
@@ -156,3 +150,7 @@
 | 2026-08-30 | GAP-8 | Documentos de gobernanza creados | Oscar |
 | 2026-08-30 | GAP-2 | `AppLayout.tsx` y `AuthLayout.tsx` creados; rutas anidadas con `Outlet` en `App.tsx` | Oscar |
 | 2026-08-30 | GAP-3 | 10 componentes shadcn/ui instalados + corrección de `sonner.tsx` para Vite | Oscar |
+| 2026-08-30 | GAP-4 | 7 tests unitarios para `auditoria.registrar()` — 7/7 PASSED (`pytest apps/auditoria/`) | Oscar |
+| 2026-08-30 | GAP-7 | `tests/auth.spec.ts` con 4 escenarios E2E Playwright + `playwright.config.ts` | Oscar |
+| 2026-08-30 | — | Fix healthcheck Docker: `curl` → `urllib.request` en `docker-compose.yml` (`python:3.12-slim` no incluye curl) | Oscar |
+| 2026-08-30 | — | Fix login 404: `VITE_API_URL` corregido a `/api`; `authService` usa `AUTH_BASE='/api/auth'` (no depende de env var) | Oscar |

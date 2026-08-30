@@ -1,6 +1,7 @@
 import type { AuthUser, LoginCredentials } from '@/types/auth'
 
-const API_URL = import.meta.env.VITE_API_URL ?? '/api'
+// Auth endpoints viven en /api/auth/ — ruta fija del backend, no versionada bajo /api/v1/
+const AUTH_BASE = '/api/auth'
 
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)
@@ -10,7 +11,7 @@ function getCsrfToken(): string {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isUnsafeMethod = Boolean(options.method) && options.method !== 'GET'
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${AUTH_BASE}${path}`, {
     ...options,
     credentials: 'include',
     headers: {
@@ -34,7 +35,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    const data = await request<{ user: AuthUser }>('/auth/login/', {
+    const data = await request<{ user: AuthUser }>('/login/', {
       method: 'POST',
       body: JSON.stringify(credentials),
     })
@@ -42,12 +43,12 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    await request<void>('/auth/logout/', { method: 'POST' })
+    await request<void>('/logout/', { method: 'POST' })
   },
 
   async me(): Promise<AuthUser | null> {
     try {
-      return await request<AuthUser>('/auth/me/')
+      return await request<AuthUser>('/me/')
     } catch {
       return null
     }

@@ -28,8 +28,8 @@
 - [x] **S1-T06** Crear la vista `frontend/src/pages/terceros/Proveedores.tsx` — DataTable + Dialog modal + AlertDialog toggle activo. *(2026-08-30 — Oscar)*
 - [x] **S1-T07** Crear la vista `frontend/src/pages/terceros/ClientesMayoristas.tsx` — DataTable + modal con `pedido_minimo_modelo` (min=1). *(2026-08-30 — Oscar)*
 - [x] **S1-T08** Crear la vista `frontend/src/pages/terceros/AgentesAduanales.tsx` — DataTable + Dialog + AlertDialog. *(2026-08-30 — Oscar)*
-- [ ] **S1-T09** Escribir tests E2E con Playwright para el flujo de login y protección de rutas.
-- [ ] **S1-T10** Tests `apps/auditoria/tests.py` — cobertura del servicio `registrar()`.
+- [x] **S1-T09** Escribir tests E2E con Playwright para el flujo de login y protección de rutas. *(2026-08-30 — Oscar)*
+- [x] **S1-T10** Tests `apps/auditoria/tests.py` — cobertura del servicio `registrar()`. *(2026-08-30 — Oscar)*
 
 ---
 
@@ -40,7 +40,7 @@
 | GAP-1 | 🔴 Crítico | Todas las vistas de negocio del frontend son `ModulePlaceholder` | Shirley + Oscar |
 | ~~GAP-2~~ | ~~🔴 Bloqueante~~ | ~~`src/layouts/` vacío~~ | ✅ Resuelto 2026-08-30 |
 | ~~GAP-3~~ | ~~🟡 Medio~~ | ~~shadcn/ui incompleto~~ | ✅ Resuelto 2026-08-30 |
-| GAP-4 | 🟡 Medio | `apps/auditoria/tests.py` con 3 líneas — sin cobertura real | Oscar |
+| ~~GAP-4~~ | ~~🟡 Medio~~ | ~~`apps/auditoria/tests.py` sin cobertura real~~ | ✅ Resuelto 2026-08-30 |
 | GAP-5 | 🟢 Bajo | Tests de `reportes` son mínimos (25 líneas) | Shirley |
 
 Ver detalle completo en [`docs/05-FINDINGS_DEUDA.md`](05-FINDINGS_DEUDA.md).
@@ -83,4 +83,8 @@ dev                          ← rama de integración
 - **S1-T03 ✅:** `AuthLayout.tsx` creado — layout B2B de dos columnas. `Login.tsx` refactorizado con shadcn `Input`/`Label` y Sonner `toast.error()` en lugar de error inline.
 - **S1-T02 ✅:** `AppLayout.tsx` creado — sidebar fijo desktop / hamburguesa mobile, nav filtrada por `role` según matriz de `06-TASK_PLAN.md`, `AlertDialog` de confirmación para logout. `App.tsx` actualizado a rutas anidadas con `<Outlet />`.
 - `tsc --noEmit` — 0 errores. `npm run lint` — 0 errores propios.
-- **Próxima acción:** S1-T09 (E2E Playwright) y S1-T10 (tests de auditoría backend). Sprint 1 cerrado en CRUDs maestros.
+- **S1-T09 ✅ · S1-T10 ✅:** Tests Playwright y suite unitaria de auditoría escritos y ejecutados. `pytest apps/auditoria/` → 7/7 PASSED.
+- **Fix healthcheck Docker ✅:** `curl` reemplazado por `urllib.request` en healthcheck del backend (`python:3.12-slim` no incluye `curl`). Stack completo levanta sin errores.
+- **Fix login 404 ✅:** `VITE_API_URL` corregido de `/api/v1` a `/api`. `authService.ts` desacoplado de env var — usa `AUTH_BASE='/api/auth'`. Login funcional verificado en navegador.
+- **UI AuthLayout ✅:** Panel izquierdo rediseñado — `bg-zinc-950`, orbes decorativos, hero text, feature list y 4 stats.
+- **Próxima acción:** Sprint 2 — Importaciones, Documentos y Costeo (módulos de negocio centrales).
