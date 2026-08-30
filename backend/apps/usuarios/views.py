@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 
 from rest_framework import viewsets
 
-from .serializers import LoginSerializer, UsuarioListSerializer, UsuarioMeSerializer
+from .models import Usuario
+from .serializers import LoginSerializer, UsuarioListSerializer, UsuarioMeSerializer, UsuarioWriteSerializer
 
 
 class LoginView(APIView):
@@ -74,14 +75,13 @@ class MeView(APIView):
         return Response(UsuarioMeSerializer(request.user).data)
 
 
-class UsuarioViewSet(viewsets.ReadOnlyModelViewSet):
-    """GET /api/v1/usuarios/ — listado de usuarios del sistema.
+class UsuarioViewSet(viewsets.ModelViewSet):
+    """CRUD /api/v1/usuarios/ — gestión de usuarios del sistema.
 
-    Solo el Administrador puede ver este listado. Read-only: la creación
-    y edición de usuarios se gestiona desde el Django Admin.
+    Solo el Administrador puede leer y escribir en este endpoint.
+    Las contraseñas se hashean en el serializer; nunca se exponen en lecturas.
     """
 
-    serializer_class = UsuarioListSerializer
     permission_classes = [IsAuthenticated]
     search_fields = ["username", "first_name", "last_name", "email"]
     ordering_fields = ["username", "last_name"]
@@ -92,4 +92,9 @@ class UsuarioViewSet(viewsets.ReadOnlyModelViewSet):
         if not (user.rol_id and user.rol.nombre == Roles.ADMINISTRADOR):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied
-        return self.serializer_class.Meta.model.objects.select_related("rol").order_by("username")
+        return Usuario.objects.select_related("rol").order_by("username")
+
+    def get_serializer_class(self):
+        if self.action in ("create", "update", "partial_update"):
+            return UsuarioWriteSerializer
+        return UsuarioListSerializer

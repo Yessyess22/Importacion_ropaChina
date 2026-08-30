@@ -19,12 +19,15 @@
 | **Propietario** | Shirley + Oscar |
 | **Estado** | 🔴 Abierto |
 
-**Descripción:** Todas las rutas del frontend excepto `/login` y `/` (dashboard mínimo) renderizan un componente `ModulePlaceholder` sin lógica de consumo de API. El backend tiene una API REST completa y funcional, pero no existe ninguna pantalla de negocio construida para: Catálogo, Importaciones, Pedidos, Costeo, Inventario, Terceros, Reportes ni Bitácora.
+**Descripción:** Todas las rutas del frontend excepto `/login` y `/` (dashboard mínimo) renderizan un componente `ModulePlaceholder` sin lógica de consumo de API. El backend tiene una API REST completa y funcional, pero no existe ninguna pantalla de negocio construida para: Catálogo, Importaciones, Pedidos, Costeo, Inventario, Reportes ni Bitácora.
 
-**Impacto:** El sistema no puede ser usado por ningún rol salvo para iniciar y cerrar sesión.
+**Progreso Sprint 1 (parcialmente resuelto):**
+- ✅ `/usuarios` — CRUD completo: tabla paginada, modal alta/edición (grid 2 col), AlertDialog toggle estado, toasts. Backend: `UsuarioWriteSerializer` + `ModelViewSet`.
+- ✅ `/proveedores` — CRUD completo con AlertDialog.
+- ✅ `/clientes-mayoristas` — CRUD completo.
+- ✅ `/agentes-aduanales` — CRUD completo.
 
-**Resolución:**
-- Sprint 1: CRUDs de Terceros y Usuarios
+**Pendiente (Sprints 2 y 3):**
 - Sprint 2: Importaciones, Documentos, Costeo
 - Sprint 3: Catálogo y Pedidos
 

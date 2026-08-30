@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { ClienteMayorista } from '@/types/terceros'
 import { useAuth } from '@/hooks/useAuth'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -179,13 +178,20 @@ export function ClientesMayoristas() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Clientes Mayoristas</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {totalCount} {totalCount === 1 ? 'cliente registrado' : 'clientes registrados'}
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Clientes Mayoristas</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {totalCount} {totalCount === 1 ? 'cliente registrado' : 'clientes registrados'}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+        <Input
+          placeholder="Buscar por razón social o NIT…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
+          className="max-w-xs"
+        />
         {canWrite && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />
@@ -193,13 +199,6 @@ export function ClientesMayoristas() {
           </Button>
         )}
       </div>
-
-      <Input
-        placeholder="Buscar por razón social o NIT…"
-        value={search}
-        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
-        className="max-w-xs"
-      />
 
       <div className="rounded-lg border border-border">
         <Table>
@@ -238,9 +237,15 @@ export function ClientesMayoristas() {
                     Mín. {item.pedido_minimo_modelo} unid./modelo
                   </TableCell>
                   <TableCell>
-                    <Badge variant={item.activo ? 'default' : 'secondary'}>
-                      {item.activo ? 'Activo' : 'Inactivo'}
-                    </Badge>
+                    {item.activo ? (
+                      <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-600 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400">
+                        Inactivo
+                      </span>
+                    )}
                   </TableCell>
                   {canWrite && (
                     <TableCell className="text-right">
@@ -289,15 +294,15 @@ export function ClientesMayoristas() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="cm_razon_social">Razón Social *</Label>
+                <Label htmlFor="cm_razon_social">Razón Social <span className="ml-0.5 text-destructive">*</span></Label>
                 <Input id="cm_razon_social" value={form.razon_social} onChange={(e) => setField('razon_social', e.target.value)} required />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_nit">NIT *</Label>
+                <Label htmlFor="cm_nit">NIT <span className="ml-0.5 text-destructive">*</span></Label>
                 <Input id="cm_nit" value={form.nit} onChange={(e) => setField('nit', e.target.value)} required />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_tipo">Tipo de Negocio *</Label>
+                <Label htmlFor="cm_tipo">Tipo de Negocio <span className="ml-0.5 text-destructive">*</span></Label>
                 <Input
                   id="cm_tipo"
                   list="tipos-negocio"
@@ -311,7 +316,7 @@ export function ClientesMayoristas() {
                 </datalist>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_min">Mínimo de Pedido (unid./modelo) *</Label>
+                <Label htmlFor="cm_min">Mínimo de Pedido (unid./modelo) <span className="ml-0.5 text-destructive">*</span></Label>
                 <Input
                   id="cm_min"
                   type="number"
@@ -335,8 +340,13 @@ export function ClientesMayoristas() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Guardar'}
+              <Button type="submit" disabled={submitting} className="min-w-25">
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Guardando…
+                  </span>
+                ) : 'Guardar'}
               </Button>
             </DialogFooter>
           </form>

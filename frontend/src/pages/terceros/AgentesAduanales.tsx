@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { AgenteAduanal } from '@/types/terceros'
 import { useAuth } from '@/hooks/useAuth'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -157,13 +156,20 @@ export function AgentesAduanales() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Agentes Aduanales</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {totalCount} {totalCount === 1 ? 'agente registrado' : 'agentes registrados'}
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Agentes Aduanales</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {totalCount} {totalCount === 1 ? 'agente registrado' : 'agentes registrados'}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+        <Input
+          placeholder="Buscar por razón social o NIT…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
+          className="max-w-xs"
+        />
         {canWrite && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />
@@ -171,13 +177,6 @@ export function AgentesAduanales() {
           </Button>
         )}
       </div>
-
-      <Input
-        placeholder="Buscar por razón social o NIT…"
-        value={search}
-        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }}
-        className="max-w-xs"
-      />
 
       <div className="rounded-lg border border-border">
         <Table>
@@ -214,9 +213,15 @@ export function AgentesAduanales() {
                   <TableCell className="font-mono text-sm">{item.numero_registro}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{item.telefono || '—'}</TableCell>
                   <TableCell>
-                    <Badge variant={item.activo ? 'default' : 'secondary'}>
-                      {item.activo ? 'Activo' : 'Inactivo'}
-                    </Badge>
+                    {item.activo ? (
+                      <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-600 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400">
+                        Inactivo
+                      </span>
+                    )}
                   </TableCell>
                   {canWrite && (
                     <TableCell className="text-right">
@@ -290,8 +295,13 @@ export function AgentesAduanales() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Guardar'}
+              <Button type="submit" disabled={submitting} className="min-w-25">
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Guardando…
+                  </span>
+                ) : 'Guardar'}
               </Button>
             </DialogFooter>
           </form>

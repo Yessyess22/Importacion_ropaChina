@@ -155,10 +155,10 @@ export function AppLayout() {
   const SidebarContent = (
     <nav className="flex h-full flex-col gap-1 p-3">
       <div className="mb-4 flex items-center gap-2 px-2 py-3">
-        <span className="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+        <span className="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground shadow-sm">
           T
         </span>
-        <span className="text-sm font-semibold text-foreground">Trendy Import</span>
+        <span className="text-sm font-semibold text-zinc-100">Trendy Import</span>
       </div>
 
       <div className="flex-1 space-y-0.5 overflow-y-auto">
@@ -175,10 +175,10 @@ export function AppLayout() {
               to={item.href}
               onClick={() => setIsSidebarOpen(false)}
               className={cn(
-                'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+                'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-150',
                 isActive
-                  ? 'bg-primary/10 font-medium text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ? 'scale-[1.02] bg-primary font-medium text-primary-foreground shadow-sm'
+                  : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100',
               )}
             >
               <Icon className="size-4 shrink-0" />
@@ -188,16 +188,16 @@ export function AppLayout() {
         })}
       </div>
 
-      <div className="border-t border-border pt-3">
+      <div className="border-t border-zinc-800 pt-3">
         <div className="mb-2 px-2.5">
-          <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-          <p className="truncate text-xs text-muted-foreground">{role}</p>
+          <p className="truncate text-sm font-medium text-zinc-100">{displayName}</p>
+          <p className="truncate text-xs text-zinc-400">{role}</p>
         </div>
 
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start gap-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
           onClick={() => setIsLogoutDialogOpen(true)}
         >
           <LogOut className="size-4" />
@@ -210,7 +210,7 @@ export function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 lg:flex">
         {SidebarContent}
       </aside>
 
@@ -225,7 +225,7 @@ export function AppLayout() {
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-56 flex-col border-r border-border bg-background transition-transform duration-200 lg:hidden',
+          'fixed inset-y-0 left-0 z-50 w-56 flex-col border-r border-zinc-800 bg-zinc-950 transition-transform duration-200 lg:hidden',
           isSidebarOpen ? 'flex translate-x-0' : 'hidden -translate-x-full',
         )}
       >

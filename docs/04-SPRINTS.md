@@ -27,6 +27,7 @@
 - [ ] El login redirige al dashboard mostrando nombre y rol del usuario.
 - [ ] El sidebar muestra solo las rutas permitidas para el rol activo.
 - [ ] El sistema de Toast (Sonner) funciona para éxitos y errores.
+- [x] Un Administrador puede crear, editar y desactivar Usuarios desde la UI (contraseña hasheada en backend; `AlertDialog` de confirmación de cambio de estado).
 - [ ] Un Administrador puede crear, editar y desactivar Proveedores desde la UI.
 - [ ] Un Administrador puede crear y editar Clientes Mayoristas desde la UI.
 - [ ] Un Administrador puede crear y editar Agentes Aduanales desde la UI.
@@ -41,7 +42,7 @@
 | S1-T02 | Crear `AppLayout` (sidebar responsivo, header, nav por rol) | Oscar | `feature/s1-layout-shell` | 5 |
 | S1-T03 | Crear `AuthLayout` y refactorizar `Login.tsx` | Shirley | `feature/s1-layout-shell` | 2 |
 | S1-T04 | Crear `frontend/src/utils/formatters.ts` (moneda BOB, fechas, estados ES) | Oscar | `feature/s1-utils` | 1 |
-| S1-T05 | Vista `/usuarios` — tabla paginada de usuarios con rol (Admin only) | Oscar | `feature/s1-crud-usuarios` | 3 |
+| S1-T05 | Vista `/usuarios` — CRUD completo (tabla paginada, modal alta/edición con grid 2 col, AlertDialog toggle estado, toasts) · backend: `UsuarioWriteSerializer` + `ModelViewSet` | Oscar | `feature/s1-crud-usuarios` | 5 |
 | S1-T06 | Vista `/proveedores` — DataTable + modal de alta/edición/desactivar | Shirley | `feature/s1-crud-proveedores` | 5 |
 | S1-T07 | Vista `/clientes-mayoristas` — DataTable + modal + pedido_minimo_modelo | Oscar | `feature/s1-crud-clientes` | 5 |
 | S1-T08 | Vista `/agentes-aduanales` — DataTable + modal | Shirley | `feature/s1-crud-agentes` | 3 |

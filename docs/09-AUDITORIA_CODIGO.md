@@ -111,6 +111,7 @@ Importacion_ropaChina/
 | `POST /api/auth/login/` | `LoginView` | — | Público |
 | `POST /api/auth/logout/` | `LogoutView` | — | Autenticados |
 | `GET /api/auth/me/` | `MeView` | fija cookie CSRF | Autenticados |
+| `/api/v1/usuarios/` | `UsuarioViewSet` | CRUD completo; contraseña hasheada en `UsuarioWriteSerializer` | Solo Administrador |
 | `/api/v1/proveedores/` | `ProveedorViewSet` | CRUD | Admin, Operador, Agente, Contabilidad |
 | `/api/v1/clientes-mayoristas/` | `ClienteMayoristaViewSet` | CRUD (filtrado por dueño) | Staff + ClienteMay. (propio) |
 | `/api/v1/agentes-aduanales/` | `AgenteAduanalViewSet` | CRUD | Staff |
@@ -194,17 +195,19 @@ Importacion_ropaChina/
 |------|-----------|-------------|
 | `/login` | `Login.tsx` | ✅ **Funcional** — formulario con manejo de error y submit async |
 | `/` | `Dashboard` (inline App.tsx) | ⚠️ **Placeholder mínimo** — muestra usuario, rol y botón de logout |
+| `/usuarios` | `Usuarios.tsx` | ✅ **CRUD completo** — tabla paginada + búsqueda, modal alta/edición (grid 2 col, password `write_only`), badges de rol, `AlertDialog` toggle `is_active`, toasts Sonner |
+| `/proveedores` | `Proveedores.tsx` | ✅ **CRUD completo** — tabla paginada + búsqueda, modal, AlertDialog toggle activo |
+| `/clientes-mayoristas` | `ClientesMayoristas.tsx` | ✅ **CRUD completo** |
+| `/agentes-aduanales` | `AgentesAduanales.tsx` | ✅ **CRUD completo** |
 | `/catalogo` | `ModulePlaceholder` | ❌ No implementado |
 | `/importaciones` | `ModulePlaceholder` | ❌ No implementado |
 | `/pedidos` | `ModulePlaceholder` | ❌ No implementado |
-| `/proveedores` | `ModulePlaceholder` | ❌ No implementado |
 | `/documentos` | `ModulePlaceholder` | ❌ No implementado |
 | `/costeo` | `ModulePlaceholder` | ❌ No implementado |
 | `/tributos` | `ModulePlaceholder` | ❌ No implementado |
 | `/tipo-cambio` | `ModulePlaceholder` | ❌ No implementado |
 | `/stock` | `ModulePlaceholder` | ❌ No implementado |
 | `/reportes` | `ModulePlaceholder` | ❌ No implementado |
-| `/usuarios` | `ModulePlaceholder` | ❌ No implementado |
 | `/auditoria` | `ModulePlaceholder` | ❌ No implementado |
 | `/despachos` | `ModulePlaceholder` | ❌ No implementado |
 
@@ -266,8 +269,8 @@ Los archivos `01-BITACORA_DESARROLLO.md`, `02-SESSION_MEM.md`, `05-FINDINGS_DEUD
 | **Bitácora de auditoría** | ✅ Servicio activo; tests pendientes |
 | **Tests de backend** | ✅ Mayoría cubiertos; `auditoria` y `reportes` débiles |
 | **Frontend — infraestructura de auth** | ✅ Completa (contexto, cliente API, rutas protegidas) |
-| **Frontend — vistas de negocio** | ❌ 0% — todas son `ModulePlaceholder` |
-| **Frontend — componentes UI** | ❌ Incompletos (solo `Button` de shadcn/ui) |
-| **Frontend — layout shell** | ❌ No existe |
+| **Frontend — vistas de negocio** | 🔶 Sprint 1 completo: `/usuarios`, `/proveedores`, `/clientes-mayoristas`, `/agentes-aduanales` ✅. Resto pendiente Sprints 2–3 |
+| **Frontend — componentes UI** | ✅ 10 componentes shadcn/ui instalados (`table`, `dialog`, `alert-dialog`, `input`, `label`, `select`, `badge`, `card`, `skeleton`, `sonner`) |
+| **Frontend — layout shell** | ✅ `AppLayout` + `AuthLayout` operativos; nav filtrada por rol |
 
 El backend está en condición de integración completa. El frontend tiene la infraestructura de autenticación lista y todos los tipos TypeScript definidos, pero ninguna vista de negocio construida. El trabajo pendiente de mayor volumen está íntegramente en la capa de presentación (Fase 4).
