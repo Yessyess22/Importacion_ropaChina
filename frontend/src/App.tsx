@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
-import { useAuth } from '@/hooks/useAuth'
+import { AppLayout } from '@/layouts/AppLayout'
 import { Login } from '@/pages/Login'
+import { useAuth } from '@/hooks/useAuth'
 import type { Role } from '@/types/auth'
 
 const ADMINISTRADOR: Role = 'Administrador'
@@ -13,26 +14,25 @@ const AGENTE_ADUANAL: Role = 'Agente Aduanal'
 const CONTABILIDAD: Role = 'Contabilidad'
 const CLIENTE_MAYORISTA: Role = 'Cliente Mayorista'
 
-function ModulePlaceholder({ title }: { title: string }) {
+function Dashboard() {
+  const { user, role } = useAuth()
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background p-8 text-foreground">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      <p className="text-muted-foreground">Módulo de negocio — se implementará en la Fase 4.</p>
-    </main>
+    <div className="flex flex-col gap-2">
+      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+      <p className="text-sm text-muted-foreground">
+        Bienvenido, <strong>{user?.first_name || user?.username}</strong> — {role}
+      </p>
+    </div>
   )
 }
 
-function Dashboard() {
-  const { user, role, logout } = useAuth()
-
+function ModulePlaceholder({ title }: { title: string }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-8 text-foreground">
-      <h1 className="text-3xl font-bold">Trendy Import SRL</h1>
-      <p className="text-muted-foreground">
-        Sesión iniciada como <strong>{user?.username}</strong> ({role})
-      </p>
-      <Button onClick={() => logout()}>Cerrar sesión</Button>
-    </main>
+    <div className="flex flex-col gap-2">
+      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+      <p className="text-sm text-muted-foreground">Módulo en desarrollo.</p>
+    </div>
   )
 }
 
@@ -42,124 +42,124 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
 
       <Route
-        path="/"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Dashboard />} />
 
-      <Route
-        path="/usuarios"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
-            <ModulePlaceholder title="Usuarios" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/auditoria"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
-            <ModulePlaceholder title="Bitácora" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/reportes"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
-            <ModulePlaceholder title="Reportes" />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="usuarios"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
+              <ModulePlaceholder title="Usuarios" />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/catalogo"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CLIENTE_MAYORISTA]}>
-            <ModulePlaceholder title="Catálogo" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/proveedores"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL]}>
-            <ModulePlaceholder title="Proveedores" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/importaciones"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
-            <ModulePlaceholder title="Importaciones" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/stock"
-        element={
-          <ProtectedRoute
-            allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD, CLIENTE_MAYORISTA]}
-          >
-            <ModulePlaceholder title="Stock" />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="proveedores"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL]}>
+              <ModulePlaceholder title="Proveedores" />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/documentos"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, AGENTE_ADUANAL]}>
-            <ModulePlaceholder title="Documentos" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/despachos"
-        element={
-          <ProtectedRoute allowedRoles={[AGENTE_ADUANAL]}>
-            <ModulePlaceholder title="Despachos" />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="clientes-mayoristas"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR]}>
+              <ModulePlaceholder title="Clientes Mayoristas" />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/costeo"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, CONTABILIDAD]}>
-            <ModulePlaceholder title="Costeo" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tributos"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, CONTABILIDAD]}>
-            <ModulePlaceholder title="Tributos" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tipo-cambio"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, CONTABILIDAD]}>
-            <ModulePlaceholder title="Tipo de cambio" />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="agentes-aduanales"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL]}>
+              <ModulePlaceholder title="Agentes Aduanales" />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/pedidos"
-        element={
-          <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD, CLIENTE_MAYORISTA]}>
-            <ModulePlaceholder title="Pedidos" />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="catalogo"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CLIENTE_MAYORISTA]}>
+              <ModulePlaceholder title="Catálogo" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="importaciones"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
+              <ModulePlaceholder title="Importaciones" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="documentos"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, AGENTE_ADUANAL]}>
+              <ModulePlaceholder title="Documentos" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="costeo"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, CONTABILIDAD]}>
+              <ModulePlaceholder title="Costeo" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="stock"
+          element={
+            <ProtectedRoute
+              allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD, CLIENTE_MAYORISTA]}
+            >
+              <ModulePlaceholder title="Stock" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="pedidos"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD, CLIENTE_MAYORISTA]}>
+              <ModulePlaceholder title="Pedidos" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="reportes"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
+              <ModulePlaceholder title="Reportes" />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="auditoria"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
+              <ModulePlaceholder title="Bitácora" />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -171,6 +171,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster richColors closeButton />
       </AuthProvider>
     </BrowserRouter>
   )

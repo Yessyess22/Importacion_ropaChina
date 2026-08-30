@@ -1,7 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { AuthLayout } from '@/layouts/AuthLayout'
 import { useAuth } from '@/hooks/useAuth'
 
 export function Login() {
@@ -10,7 +14,6 @@ export function Login() {
   const location = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (isAuthenticated) {
@@ -18,68 +21,62 @@ export function Login() {
     return <Navigate to={from} replace />
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: { preventDefault(): void }) {
     event.preventDefault()
-    setError(null)
     setIsSubmitting(true)
     try {
       await login({ username, password })
       navigate('/', { replace: true })
     } catch {
-      setError('Usuario o contraseña incorrectos.')
+      toast.error('Credenciales incorrectas', {
+        description: 'Verificá tu usuario y contraseña e intentá de nuevo.',
+      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-8">
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border p-6"
-      >
+    <AuthLayout>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Iniciar sesión</h1>
-          <p className="text-sm text-muted-foreground">Trendy Import SRL</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Iniciar sesión</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ingresá tus credenciales para continuar.
+          </p>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="username" className="text-sm text-foreground">
-            Usuario
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="username">Usuario</Label>
+          <Input
             id="username"
             name="username"
             autoComplete="username"
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            className="rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground"
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="tu.usuario"
             required
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="password" className="text-sm text-foreground">
-            Contraseña
-          </label>
-          <input
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="password">Contraseña</Label>
+          <Input
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground"
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             required
           />
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Ingresando...' : 'Ingresar'}
         </Button>
       </form>
-    </main>
+    </AuthLayout>
   )
 }
