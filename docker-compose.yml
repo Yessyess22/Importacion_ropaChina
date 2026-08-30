@@ -1,62 +1,89 @@
 services:
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
-    env_file: .env
+    container_name: trendy_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      trendy_network:
+        ipv4_address: 10.0.0.10
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.development
+    container_name: trendy_backend
     volumes:
       - ./backend:/app
-    ports:
-      - "8000:8000"
+      - media_volume:/app/media
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+    networks:
+      trendy_network:
+        ipv4_address: 10.0.0.20
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
   frontend:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
-    restart: unless-stopped
-    env_file: .env
+    container_name: trendy_frontend
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    ports:
-      - "5173:5173"
+    env_file: .env
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    networks:
+      trendy_network:
+        ipv4_address: 10.0.0.30
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 
   nginx:
     image: nginx:1.27-alpine
-    restart: unless-stopped
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    container_name: trendy_nginx
     ports:
       - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - media_volume:/app/media:ro
+    networks:
+      trendy_network:
+        ipv4_address: 10.0.0.40
     depends_on:
-      - backend
       - frontend
+      - backend
+    restart: unless-stopped
+
+networks:
+  trendy_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
 
 volumes:
-  postgres_data:
+  pg_data:
+  media_volume:

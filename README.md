@@ -181,3 +181,67 @@ debería quedar expuesto.
 ## Fases futuras
 
 - **Fase 5+:** Frontend de negocio (catálogo, importaciones, pedidos, etc. consumiendo `frontend/src/services/api.ts`), pruebas E2E (Playwright), throttling/rate limiting para producción, notificaciones reales de estado de pedido.
+
+---
+
+## Flujo de Trabajo y Colaboración en Git
+
+Para asegurar la consistencia y evitar colisiones de código entre **Shirley** y **Oscar** durante el desarrollo de la Fase 5, implementamos un esquema de Git Flow simplificado:
+
+1. **Rama `main` (Producción Estable):**
+   - Es sagrada. Solo contiene código completamente probado, libre de bugs y listo para ser evaluado por el docente.
+   - Nadie realiza commits directos en `main`.
+
+2. **Rama `dev` (Integración de Desarrollo):**
+   - Es la base de integración de tareas diarias. De aquí parten las nuevas funcionalidades y aquí se fusionan.
+
+3. **Ramas `feature/` (Funcionalidades de Sprint):**
+   - Cada tarea individual se desarrolla en su propia rama que nace de `dev`.
+   - Nomenclatura: `feature/s1-auth-context`, `feature/s2-calculo-cif`, `feature/s3-catalogo-grilla`.
+
+4. **Protocolo de Integración y Revisión de Código (Peer Review):**
+   - Al terminar una tarea, el desarrollador sube su rama al servidor remoto y abre un **Pull Request (PR)** apuntando a `dev`.
+   - **Es obligatorio que el otro compañero revise visual y técnicamente el código** antes de aprobar el merge (comprobando que corran las migraciones, que no haya estilos inline y que los tests pasen en local).
+   - Una vez aprobado el merge en `dev`, ambos actualizan sus ramas locales mediante `git pull origin dev` para trabajar sobre la última versión unificada.
+
+---
+
+## Guía de Arranque Rápido para Shirley y Oscar
+
+Sigue estos pasos para sincronizar tu entorno local e iniciar el desarrollo:
+
+**1. Clona el repositorio y muévete a la rama de desarrollo:**
+
+```bash
+git clone <URL-REPOSITORIO>
+cd trendy-import
+git checkout -b dev origin/dev
+```
+
+**2. Inicializa las variables de entorno:**
+
+```bash
+cp .env.example .env
+# Abre .env y edita los valores si es necesario
+```
+
+**3. Levanta el entorno completo con Docker:**
+
+```bash
+docker compose up --build -d
+```
+
+**4. Aplica las migraciones y carga los datos maestros de prueba:**
+
+```bash
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py seed_dev_data
+```
+
+**5. Accede al sistema:**
+
+| Servicio | URL |
+|---------|-----|
+| Plataforma Web (React) | http://localhost/ |
+| Documentación interactiva de API (Swagger) | http://localhost/api/docs/ |
+| Panel de Administración (Django Admin) | http://localhost/admin/ |

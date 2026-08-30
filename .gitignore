@@ -1,40 +1,90 @@
-# Entorno
+# ==============================================================================
+# ARCHIVOS DE CONFIGURACIÓN Y CREDENCIALES (NUNCA DEBEN SUBIRSE)
+# ==============================================================================
 .env
+.env.local
+.env.*.local
 *.env
 !.env.example
 
-# Python / Django
+# ==============================================================================
+# ENTORNOS DE EJECUCIÓN Y CONTENEDORES (DOCKER)
+# ==============================================================================
+pg_data/
+media/
+static/
+staticfiles/
+.docker/
+docker-compose.override.yml
+
+# ==============================================================================
+# DEPENDENCIAS Y COMPILACIÓN - PYTHON (BACKEND)
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
-*.sqlite3
-.venv/
-venv/
+*.so
+.Python
 env/
-.pytest_cache/
-staticfiles/
-media/
-*.log
-
-# Node / React
-node_modules/
+venv/
+ENV/
+.env/
+.venv/
+develop-eggs/
 dist/
-dist-ssr/
-build/
-.vite/
-*.local
-
-# Testing / coverage
-coverage/
-htmlcov/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
 .coverage
 .coverage.*
+htmlcov/
+*.log
+*.sqlite3
 
-# Editor / OS
-.vscode/
-.idea/
+# ==============================================================================
+# DEPENDENCIAS Y COMPILACIÓN - NODE/REACT (FRONTEND)
+# ==============================================================================
+node_modules/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/build/
+.vite/
+.eslintcache
+.stylelintcache
+*.local
+.pnpm-store/
+
+# ==============================================================================
+# PRUEBAS E INTEGRACIÓN - PLAYWRIGHT / QA
+# ==============================================================================
+test-results/
+playwright-report/
+blob-report/
+playwright/.local-browsers/
+coverage/
+
+# ==============================================================================
+# SISTEMAS OPERATIVOS Y EDITORES DE CÓDIGO
+# ==============================================================================
 .DS_Store
 Thumbs.db
-
-# Docker
-docker-compose.override.yml
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
