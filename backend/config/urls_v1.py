@@ -8,6 +8,7 @@ que sigan consumiendo v1 (sección 7 del encargo).
 from django.urls import include, path
 
 urlpatterns = [
+    path("", include("apps.usuarios.urls_v1")),
     path("", include("apps.terceros.urls")),
     path("", include("apps.catalogo.urls")),
     path("", include("apps.importaciones.urls")),

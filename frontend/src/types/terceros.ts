@@ -23,3 +23,14 @@ export interface ClienteMayorista {
   pedido_minimo_modelo: number
   usuario: number | null
 }
+
+export interface AgenteAduanal {
+  id: number
+  razon_social: string
+  nit: string
+  telefono: string
+  email: string
+  direccion: string
+  activo: boolean
+  numero_registro: string
+}

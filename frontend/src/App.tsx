@@ -5,6 +5,10 @@ import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/context/AuthContext'
 import { AppLayout } from '@/layouts/AppLayout'
 import { Login } from '@/pages/Login'
+import { Usuarios } from '@/pages/admin/Usuarios'
+import { Proveedores } from '@/pages/terceros/Proveedores'
+import { ClientesMayoristas } from '@/pages/terceros/ClientesMayoristas'
+import { AgentesAduanales } from '@/pages/terceros/AgentesAduanales'
 import { useAuth } from '@/hooks/useAuth'
 import type { Role } from '@/types/auth'
 
@@ -54,7 +58,7 @@ function AppRoutes() {
           path="usuarios"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
-              <ModulePlaceholder title="Usuarios" />
+              <Usuarios />
             </ProtectedRoute>
           }
         />
@@ -63,7 +67,7 @@ function AppRoutes() {
           path="proveedores"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL]}>
-              <ModulePlaceholder title="Proveedores" />
+              <Proveedores />
             </ProtectedRoute>
           }
         />
@@ -72,7 +76,7 @@ function AppRoutes() {
           path="clientes-mayoristas"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR]}>
-              <ModulePlaceholder title="Clientes Mayoristas" />
+              <ClientesMayoristas />
             </ProtectedRoute>
           }
         />
@@ -81,7 +85,7 @@ function AppRoutes() {
           path="agentes-aduanales"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL]}>
-              <ModulePlaceholder title="Agentes Aduanales" />
+              <AgentesAduanales />
             </ProtectedRoute>
           }
         />

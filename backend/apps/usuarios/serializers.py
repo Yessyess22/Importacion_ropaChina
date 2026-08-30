@@ -15,3 +15,12 @@ class UsuarioMeSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = ["id", "username", "email", "first_name", "last_name", "role"]
         read_only_fields = fields
+
+
+class UsuarioListSerializer(serializers.ModelSerializer):
+    rol_nombre = serializers.CharField(source="rol.nombre", default=None, read_only=True)
+
+    class Meta:
+        model = Usuario
+        fields = ["id", "username", "first_name", "last_name", "email", "rol_nombre", "is_active"]
+        read_only_fields = fields

@@ -8,7 +8,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoginSerializer, UsuarioMeSerializer
+from rest_framework import viewsets
+
+from .serializers import LoginSerializer, UsuarioListSerializer, UsuarioMeSerializer
 
 
 class LoginView(APIView):
@@ -70,3 +72,24 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UsuarioMeSerializer(request.user).data)
+
+
+class UsuarioViewSet(viewsets.ReadOnlyModelViewSet):
+    """GET /api/v1/usuarios/ — listado de usuarios del sistema.
+
+    Solo el Administrador puede ver este listado. Read-only: la creación
+    y edición de usuarios se gestiona desde el Django Admin.
+    """
+
+    serializer_class = UsuarioListSerializer
+    permission_classes = [IsAuthenticated]
+    search_fields = ["username", "first_name", "last_name", "email"]
+    ordering_fields = ["username", "last_name"]
+
+    def get_queryset(self):
+        from apps.usuarios.permissions import Roles
+        user = self.request.user
+        if not (user.rol_id and user.rol.nombre == Roles.ADMINISTRADOR):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied
+        return self.serializer_class.Meta.model.objects.select_related("rol").order_by("username")

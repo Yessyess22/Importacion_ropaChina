@@ -24,10 +24,10 @@
 - [x] **S1-T02** Crear `AppLayout` en `frontend/src/layouts/AppLayout.tsx` con sidebar responsivo, header con nombre de usuario/rol y menú de navegación con rutas protegidas por rol. *(2026-08-30 — Oscar)*
 - [x] **S1-T03** Crear `AuthLayout` en `frontend/src/layouts/AuthLayout.tsx` y refactorizar `Login.tsx` con Sonner toast. *(2026-08-30 — Oscar)*
 - [x] **S1-T04** Crear `frontend/src/utils/formatters.ts` — `formatCurrency` BOB, `formatDate` español, `formatEstado` legible. *(2026-08-30 — Oscar)*
-- [ ] **S1-T05** Crear la vista `frontend/src/pages/admin/Usuarios.tsx` — listado de usuarios con roles (solo Administrador).
-- [ ] **S1-T06** Crear la vista `frontend/src/pages/terceros/Proveedores.tsx` — CRUD de proveedores.
-- [ ] **S1-T07** Crear la vista `frontend/src/pages/terceros/ClientesMayoristas.tsx` — CRUD de clientes.
-- [ ] **S1-T08** Crear la vista `frontend/src/pages/terceros/AgentesAduanales.tsx` — CRUD de agentes.
+- [x] **S1-T05** Crear la vista `frontend/src/pages/admin/Usuarios.tsx` — tabla paginada con badge de rol por color. *(2026-08-30 — Oscar)*
+- [x] **S1-T06** Crear la vista `frontend/src/pages/terceros/Proveedores.tsx` — DataTable + Dialog modal + AlertDialog toggle activo. *(2026-08-30 — Oscar)*
+- [x] **S1-T07** Crear la vista `frontend/src/pages/terceros/ClientesMayoristas.tsx` — DataTable + modal con `pedido_minimo_modelo` (min=1). *(2026-08-30 — Oscar)*
+- [x] **S1-T08** Crear la vista `frontend/src/pages/terceros/AgentesAduanales.tsx` — DataTable + Dialog + AlertDialog. *(2026-08-30 — Oscar)*
 - [ ] **S1-T09** Escribir tests E2E con Playwright para el flujo de login y protección de rutas.
 - [ ] **S1-T10** Tests `apps/auditoria/tests.py` — cobertura del servicio `registrar()`.
 
@@ -83,4 +83,4 @@ dev                          ← rama de integración
 - **S1-T03 ✅:** `AuthLayout.tsx` creado — layout B2B de dos columnas. `Login.tsx` refactorizado con shadcn `Input`/`Label` y Sonner `toast.error()` en lugar de error inline.
 - **S1-T02 ✅:** `AppLayout.tsx` creado — sidebar fijo desktop / hamburguesa mobile, nav filtrada por `role` según matriz de `06-TASK_PLAN.md`, `AlertDialog` de confirmación para logout. `App.tsx` actualizado a rutas anidadas con `<Outlet />`.
 - `tsc --noEmit` — 0 errores. `npm run lint` — 0 errores propios.
-- **Próxima acción:** Shirley implementa S1-T06 (`/proveedores`). Oscar implementa S1-T05 (`/usuarios`) y S1-T07 (`/clientes-mayoristas`).
+- **Próxima acción:** S1-T09 (E2E Playwright) y S1-T10 (tests de auditoría backend). Sprint 1 cerrado en CRUDs maestros.

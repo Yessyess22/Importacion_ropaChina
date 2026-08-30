@@ -1,16 +1,21 @@
-/**
- * Cliente HTTP centralizado para /api/v1/ (sección 44 del encargo).
- *
- * Reutiliza el mismo esquema de autenticación de `authService.ts`
- * (sesión por cookie + `X-CSRFToken` en escrituras): no se introduce un
- * segundo mecanismo de auth para las rutas de negocio.
- */
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 const V1_URL = `${API_URL}/v1`
 
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)
   return match ? decodeURIComponent(match[1]) : ''
+}
+
+function extractErrorMessage(data: Record<string, unknown>): string {
+  if (typeof data.detail === 'string') return data.detail
+  if (Array.isArray(data.non_field_errors) && typeof data.non_field_errors[0] === 'string') {
+    return data.non_field_errors[0]
+  }
+  // DRF field-level errors: { field: ["msg1"] }
+  for (const value of Object.values(data)) {
+    if (Array.isArray(value) && typeof value[0] === 'string') return value[0]
+  }
+  return 'Error de comunicación con el servidor.'
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -29,7 +34,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.detail ?? 'Error de comunicación con el servidor.')
+    throw new Error(extractErrorMessage(data as Record<string, unknown>))
   }
 
   if (response.status === 204) {

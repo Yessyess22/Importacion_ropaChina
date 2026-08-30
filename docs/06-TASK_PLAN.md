@@ -13,10 +13,6 @@
 
 | ID | Tarea | Responsable | Dependencias | SP |
 |----|-------|-------------|-------------|-----|
-| **S1-T05** | Vista `/usuarios` — tabla paginada de usuarios, columnas: username, nombre, email, rol, activo. Solo Administrador | Oscar | S1-T02 ✅ | 3 |
-| **S1-T06** | Vista `/proveedores` — DataTable con búsqueda, paginación, modal de alta/edición, toggle de activo | Shirley | S1-T02 ✅ | 5 |
-| **S1-T07** | Vista `/clientes-mayoristas` — DataTable + modal con campo `pedido_minimo_modelo` editable | Oscar | S1-T02 ✅ | 5 |
-| **S1-T08** | Vista `/agentes-aduanales` — DataTable + modal de alta/edición | Shirley | S1-T02 ✅ | 3 |
 | **S1-T09** | E2E con Playwright: login válido → dashboard, login inválido → error Toast, logout → `/login`, redirección de rol no autorizado | Ambos | S1-T03 ✅ | 3 |
 | **S1-T10** | Tests `apps/auditoria/tests.py`: crear importación → verificar registro Bitacora, snapshot de usuario_repr | Oscar | Ninguna (backend) | 2 |
 
@@ -36,6 +32,10 @@
 | **S1-T02** | Crear `AppLayout.tsx`: sidebar responsivo con nav filtrada por rol, header usuario/rol, logout con `AlertDialog` | Oscar | 2026-08-30 | `main` |
 | **S1-T03** | Crear `AuthLayout.tsx` y refactorizar `Login.tsx` con Sonner toast + shadcn `Input`/`Label` | Oscar | 2026-08-30 | `main` |
 | **S1-T04** | Crear `frontend/src/utils/formatters.ts`: `formatCurrency` BOB, `formatDate` español, `formatEstado` legible | Oscar | 2026-08-30 | `main` |
+| **S1-T05** | Vista `/usuarios` — tabla paginada con rol coloreado (Badge por rol) y estado activo/inactivo | Oscar | 2026-08-30 | `main` |
+| **S1-T06** | Vista `/proveedores` — DataTable + modal alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
+| **S1-T07** | Vista `/clientes-mayoristas` — DataTable + modal con `pedido_minimo_modelo` validado (min=1) | Oscar | 2026-08-30 | `main` |
+| **S1-T08** | Vista `/agentes-aduanales` — DataTable + modal de alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
 
 ---
 
