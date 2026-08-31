@@ -23,6 +23,8 @@ services:
       context: .
       dockerfile: docker/backend/Dockerfile
     container_name: trendy_backend
+    ports:
+      - "8000:8000"
     volumes:
       - ./backend:/app
       - media_volume:/app/media
@@ -48,6 +50,8 @@ services:
       context: .
       dockerfile: docker/frontend/Dockerfile
     container_name: trendy_frontend
+    ports:
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules

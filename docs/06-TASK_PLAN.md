@@ -1,21 +1,126 @@
-# Plan de Tareas — Sprint 1 Activo
+# Plan de Tareas — Sprint 2 Activo
 ## Trendy Import SRL · Fase 5
 
-**Sprint:** 1 — Autenticación, Layout Shell y CRUDs Maestros
-**Período:** 2026-08-30 → 2026-09-20
+**Sprint:** 2 — Operaciones de Importación, Documentos y Costeo
+**Período:** 2026-09-21 → 2026-10-11 (planificado; trabajo adelantado desde 2026-08-30)
 **Equipo:** Shirley Yessica Escobar Gutierrez · Oscar Alejandro Segovia Villarreal
 
 ---
 
-## Tablero de Tareas
+## Tablero de Tareas — Sprint 2
 
 ### 🔴 Pendiente
 
-*(Sprint 1 completo — ver Sprint 2 en planificación)*
+*(Ninguna — Sprint 2 completo)*
 
 ### 🟡 En progreso
 
-*(Ninguna — Sprint 1 cerrado)*
+*(Ninguna)*
+
+### ✅ Completado — Sprint 2
+
+| ID | Tarea | Responsable | Fecha cierre | PR |
+|----|-------|-------------|-------------|-----|
+| **S2-T01** | Vista `/importaciones` — DataTable con filtros de estado y proveedor, búsqueda por código | Shirley | 2026-08-30 | `main` |
+| **S2-T02** | Vista `/importaciones/nueva` — formulario de registro con CIF previsualizado + líneas de detalle | Shirley | 2026-08-30 | `main` |
+| **S2-T03** | Vista `/importaciones/:id` — detalle, líneas de variantes ingresadas, modal de cambio de estado con stepper | Shirley | 2026-08-30 | `main` |
+| **S2-T04** | Vista `/documentos` — selector de operación, upload multipart, descarga y eliminación | Shirley | 2026-08-30 | `main` |
+| **S2-T05** | Vista `/costeo` — selector de operación, formulario de tributos, cálculo de costo total nacionalizado | Shirley | 2026-08-30 | `main` |
+| **S2-T06** | Vista `/tipo-cambio` — CRUD tabla de tipo de cambio USD/BOB | Shirley | 2026-08-30 | `main` |
+| **S2-T07** | E2E Playwright: flujo registrar → en tránsito → en aduana → liberar | Shirley | 2026-08-30 | `main` |
+
+---
+
+## Especificaciones técnicas — Sprint 2
+
+### S2-T01 · Vista Importaciones
+
+```
+frontend/src/pages/importaciones/Importaciones.tsx
+```
+
+**Endpoint:** `GET /api/v1/importaciones/?page=&search=&estado=&proveedor=`. Filtros `estado` y `proveedor` vía `Select` de shadcn; `proveedor` se resuelve a nombre cruzando `GET /proveedores/?page_size=100`. Botón "Nueva Importación" visible solo para Admin/Operador, enlaza a `/importaciones/nueva`.
+
+### S2-T03 · Vista Detalle de Importación
+
+```
+frontend/src/pages/importaciones/DetalleImportacion.tsx
+```
+
+**Endpoints:** `GET /api/v1/importaciones/{id}/` (incluye `detalles` con `variante_detalle` anidado — fix aplicado en `backend/apps/importaciones/serializers.py`), `GET /proveedores/{id}/`, `GET /agentes-aduanales/{id}/`, `GET /transportistas/{id}/` (solo si el FK no es null), `POST /api/v1/importaciones/{id}/actualizar-estado/`.
+
+**Reglas de UI:**
+- El botón "Cambiar Estado" solo es visible para `Administrador`, `Operador de Comercio Exterior` y `Agente Aduanal` (mismos roles que `ESTADO_ROLES` en `backend/apps/importaciones/views.py`).
+- Las transiciones ofrecidas en el modal se calculan en frontend a partir de `TRANSICIONES_VALIDAS` (espejo de `backend/apps/importaciones/services.py`) — el backend sigue siendo la autoridad final y rechaza con 409 cualquier transición inválida.
+- Toda transición requiere confirmación explícita en un `AlertDialog` antes de invocar la API.
+- No se implementó edición de la operación (FOB/flete/seguro) en esta vista — fuera del alcance de S2-T03.
+
+### S2-T05 · Vista Costeo y Tributos
+
+```
+frontend/src/pages/costeo/Costeo.tsx
+```
+
+**Endpoints:** `GET /api/v1/importaciones/?page_size=100` (selector), `GET /api/v1/costeos/?operacion={id}` (puede no existir aún — `results` vacío), `POST /api/v1/importaciones/{id}/calcular-costeo/` (crea/recalcula el `Costeo`), `POST /api/v1/tributos/`, `DELETE /api/v1/tributos/{id}/`.
+
+**Reglas de UI:**
+- `Tributo.monto` es siempre calculado por el backend (`base_imponible × porcentaje / 100`) — nunca se envía ni se edita en el frontend.
+- El backend no recalcula `costo_total` automáticamente al crear/eliminar un tributo; el frontend marca el costeo como "desactualizado" tras cualquier cambio y exige una acción explícita de "Recalcular Costeo" (coincide con el flujo manual de CU-08).
+- Si la operación no tiene `Costeo` todavía (nunca se llamó a `calcular-costeo`), el primer intento de agregar un tributo lo crea automáticamente antes de asociar el tributo (vía `get_or_create` del backend) — no se expone un botón separado de "crear costeo vacío".
+- Eliminar un tributo requiere confirmación en `AlertDialog`.
+- **Gotcha de UI encontrado:** el `Select` de shadcn/base-ui no renderiza el texto del `SelectItem` seleccionado por defecto — solo el `value`. Hay que pasar una función como `children` de `SelectValue` para mapear el valor al label correcto. Revisar cualquier `Select` nuevo que use un `value` distinto del texto visible.
+- **Gotcha de UI encontrado (adicional):** el `value` de un `Select` controlado **nunca debe alternar entre `undefined` y un `string`** (ej. `value={x || undefined}`) — Base UI lo trata como un cambio de no-controlado a controlado y React lo marca como error. Usar siempre `value={x}` con `x` inicializado en `''`, y manejar el string vacío dentro de la función `children` de `SelectValue`.
+
+### S2-T06 · Vista Tipo de Cambio
+
+```
+frontend/src/pages/costeo/TipoCambio.tsx
+```
+
+**Endpoints:** `GET/POST/PATCH/DELETE /api/v1/tipo-cambio/`. `fecha` es única (el backend devuelve 400 ante un duplicado); `valor` con 4 decimales.
+
+**Nota:** esta vista y su ruta/ítem de sidebar no existían en absoluto antes de S2-T06, pese a que el tipo `TipoCambio` y el endpoint ya estaban listos desde Sprint 1.
+
+### S2-T04 · Vista Documentos
+
+```
+frontend/src/pages/documentos/Documentos.tsx
+```
+
+**Endpoints:** `GET /api/v1/documentos/?operacion={id}`, `POST /api/v1/documentos/` (multipart — `api.ts` ya detecta `FormData` y omite `Content-Type`), `DELETE /api/v1/documentos/{id}/` (el backend rechaza con 409 si la operación está `LIBERADA`; el frontend oculta el botón en ese caso como UX, pero el backend sigue siendo la autoridad).
+
+**Prerrequisito de infraestructura (roto hasta S2-T04, corregido en esta tarea):**
+1. `MEDIA_ROOT`/`STATIC_ROOT` en `backend/config/settings/base.py` deben ser `BASE_DIR / "..."`, nunca `BASE_DIR.parent / "..."` — con `.parent` los archivos se escriben fuera de `/app/media`, que es el volumen Docker compartido con Nginx.
+2. `nginx/nginx.conf` necesita `location /media/ { alias /app/media/; }` para servir los archivos subidos; sin esto, cualquier descarga cae en el catch-all que proxea al frontend y da 404.
+
+### S2-T02 · Vista Nueva Importación
+
+```
+frontend/src/pages/importaciones/NuevaImportacion.tsx
+```
+
+**Endpoints:** `POST /api/v1/importaciones/` (datos generales) y luego un `POST /api/v1/detalles-importacion/` por cada línea agregada, en secuencia. Las variantes seleccionables se obtienen de `GET /prendas/?page_size=100` aplanando `prenda.variantes` (la lista de variantes no trae el nombre de la prenda anidado).
+
+**Reglas de UI:**
+- El CIF que se muestra en el formulario es **solo una previsualización calculada en el cliente** (`FOB + flete + seguro`); nunca se envía en el payload — el backend lo recalcula siempre (RF-04).
+- No se permite seleccionar la misma variante en dos líneas distintas (validado en frontend antes de enviar).
+- Si falla la creación de alguna línea después de crear la operación, se notifica cuántas fallaron pero se navega igual al detalle (la operación ya existe; el usuario decide si reintenta).
+
+### S2-T07 · E2E Playwright — Flujo de Importación
+
+```
+tests/importaciones.spec.ts
+```
+
+**Prerrequisitos de infraestructura (rotos hasta esta tarea, corregidos aquí):**
+1. No existía `package.json` en la raíz del repositorio — `@playwright/test` no estaba declarado como dependencia en ningún lado alcanzable por una instalación limpia. Se creó `package.json` en la raíz.
+2. `seed_dev_data` no creaba el usuario `cliente_test` que `tests/auth.spec.ts` (escenario E4) asume — se agregó su creación junto a un `ClienteMayorista` vinculado.
+
+**Cobertura:** registrar una importación con una línea de detalle → verificar que el CIF previsualizado coincide con el CIF real devuelto por el backend → avanzar las 3 transiciones de estado con confirmación → verificar que `LIBERADA` es terminal (sin botón "Cambiar Estado"). Verificado por fuera del test que la liberación generó `MovimientoInventario` (RF-09).
+
+---
+
+## Tablero de Tareas — Sprint 1 (cerrado 2026-08-30)
 
 ### ✅ Completado
 

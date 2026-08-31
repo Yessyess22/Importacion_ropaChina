@@ -10,6 +10,12 @@ import { Usuarios } from '@/pages/admin/Usuarios'
 import { Proveedores } from '@/pages/terceros/Proveedores'
 import { ClientesMayoristas } from '@/pages/terceros/ClientesMayoristas'
 import { AgentesAduanales } from '@/pages/terceros/AgentesAduanales'
+import { Importaciones } from '@/pages/importaciones/Importaciones'
+import { DetalleImportacion } from '@/pages/importaciones/DetalleImportacion'
+import { Costeo } from '@/pages/costeo/Costeo'
+import { TipoCambio } from '@/pages/costeo/TipoCambio'
+import { Documentos } from '@/pages/documentos/Documentos'
+import { NuevaImportacion } from '@/pages/importaciones/NuevaImportacion'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import type { Role } from '@/types/auth'
@@ -172,7 +178,25 @@ function AppRoutes() {
           path="importaciones"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
-              <ModulePlaceholder title="Importaciones" />
+              <Importaciones />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="importaciones/nueva"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR]}>
+              <NuevaImportacion />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="importaciones/:id"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
+              <DetalleImportacion />
             </ProtectedRoute>
           }
         />
@@ -181,7 +205,7 @@ function AppRoutes() {
           path="documentos"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, AGENTE_ADUANAL]}>
-              <ModulePlaceholder title="Documentos" />
+              <Documentos />
             </ProtectedRoute>
           }
         />
@@ -190,7 +214,16 @@ function AppRoutes() {
           path="costeo"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, CONTABILIDAD]}>
-              <ModulePlaceholder title="Costeo" />
+              <Costeo />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="tipo-cambio"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD]}>
+              <TipoCambio />
             </ProtectedRoute>
           }
         />

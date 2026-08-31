@@ -8,7 +8,13 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('es-ES', {
+  // Las fechas puras "YYYY-MM-DD" (sin hora) las interpreta `Date` como
+  // medianoche UTC; en zonas horarias negativas (ej. America/La_Paz)
+  // `toLocaleDateString` las corre un día hacia atrás. Forzamos hora local
+  // agregando T00:00:00 solo cuando no viene un componente de hora.
+  const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+  const date = isDateOnly ? new Date(`${dateString}T00:00:00`) : new Date(dateString)
+  return date.toLocaleDateString('es-ES', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -16,9 +22,11 @@ export function formatDate(dateString: string): string {
 }
 
 const ESTADO_MAP: Record<string, string> = {
+  REGISTRADA: 'Registrada',
   EN_ADUANA: 'En Aduana',
   PENDIENTE: 'Pendiente',
   EN_TRANSITO: 'En Tránsito',
+  LIBERADA: 'Liberada',
   APROBADA: 'Aprobada',
   RECHAZADA: 'Rechazada',
   LIQUIDADA: 'Liquidada',

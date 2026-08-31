@@ -6,6 +6,7 @@ import {
   Building2,
   Calculator,
   ClipboardList,
+  DollarSign,
   FileText,
   LayoutDashboard,
   Layers,
@@ -104,6 +105,12 @@ const NAV_ITEMS: NavItem[] = [
     href: '/costeo',
     icon: Calculator,
     allowedRoles: ['Administrador', 'Contabilidad'],
+  },
+  {
+    label: 'Tipo de Cambio',
+    href: '/tipo-cambio',
+    icon: DollarSign,
+    allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Contabilidad'],
   },
   {
     label: 'Stock',

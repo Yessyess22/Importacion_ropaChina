@@ -6,9 +6,11 @@ from .models import DetalleImportacion, OperacionImportacion
 
 
 class DetalleImportacionNestedSerializer(serializers.ModelSerializer):
+    variante_detalle = VarianteProductoNestedSerializer(source="variante", read_only=True)
+
     class Meta:
         model = DetalleImportacion
-        fields = ["id", "variante", "cantidad", "costo_unitario_fob"]
+        fields = ["id", "variante", "variante_detalle", "cantidad", "costo_unitario_fob"]
 
 
 class DetalleImportacionSerializer(serializers.ModelSerializer):

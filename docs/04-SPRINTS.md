@@ -11,8 +11,8 @@
 
 | Sprint | Nombre | Período estimado | Estado |
 |--------|--------|-----------------|--------|
-| Sprint 1 | Autenticación, Layout y CRUDs Maestros | 2026-08-30 → 2026-09-20 | 🚧 En curso |
-| Sprint 2 | Importaciones, Documentos y Costeo | 2026-09-21 → 2026-10-11 | ⏳ Pendiente |
+| Sprint 1 | Autenticación, Layout y CRUDs Maestros | 2026-08-30 → 2026-09-20 | ✅ Cerrado |
+| Sprint 2 | Importaciones, Documentos y Costeo | 2026-09-21 → 2026-10-11 | ✅ Cerrado (adelantado, 2026-08-30) |
 | Sprint 3 | Catálogo Mayorista y Pedidos | 2026-10-12 → 2026-11-01 | ⏳ Pendiente |
 | Sprint 4 | Reportes, Bitácora y Pruebas E2E | 2026-11-02 → 2026-11-22 | ⏳ Pendiente |
 
@@ -24,15 +24,15 @@
 
 ### Criterios de Aceptación del Sprint
 
-- [ ] El login redirige al dashboard mostrando nombre y rol del usuario.
-- [ ] El sidebar muestra solo las rutas permitidas para el rol activo.
-- [ ] El sistema de Toast (Sonner) funciona para éxitos y errores.
+- [x] El login redirige al dashboard mostrando nombre y rol del usuario.
+- [x] El sidebar muestra solo las rutas permitidas para el rol activo.
+- [x] El sistema de Toast (Sonner) funciona para éxitos y errores.
 - [x] Un Administrador puede crear, editar y desactivar Usuarios desde la UI (contraseña hasheada en backend; `AlertDialog` de confirmación de cambio de estado).
-- [ ] Un Administrador puede crear, editar y desactivar Proveedores desde la UI.
-- [ ] Un Administrador puede crear y editar Clientes Mayoristas desde la UI.
-- [ ] Un Administrador puede crear y editar Agentes Aduanales desde la UI.
-- [ ] Las tablas de datos muestran paginación funcional consumiendo `?page=` de la API.
-- [ ] El test E2E de login y logout pasa en Playwright.
+- [x] Un Administrador puede crear, editar y desactivar Proveedores desde la UI.
+- [x] Un Administrador puede crear y editar Clientes Mayoristas desde la UI.
+- [x] Un Administrador puede crear y editar Agentes Aduanales desde la UI.
+- [x] Las tablas de datos muestran paginación funcional consumiendo `?page=` de la API.
+- [x] El test E2E de login y logout pasa en Playwright.
 
 ### Tareas detalladas
 
@@ -59,13 +59,13 @@
 
 ### Criterios de Aceptación del Sprint
 
-- [ ] Un Operador puede registrar una nueva importación; el CIF se muestra calculado automáticamente.
-- [ ] La tabla de importaciones muestra filtros por estado y proveedor.
-- [ ] El cambio de estado de la importación (transición aduanera) funciona desde un modal de confirmación.
-- [ ] Al liberar una importación, el sistema muestra el stock actualizado en la vista de stock.
-- [ ] Un Agente Aduanal puede subir documentos (PDF/imagen) y verlos en la vista de detalle.
-- [ ] Un Contador puede registrar tributos y ejecutar `calcular-costeo`; el resultado se muestra en pantalla.
-- [ ] El test E2E del flujo completo de importación (registrar → liberar) pasa en Playwright.
+- [x] Un Operador puede registrar una nueva importación; el CIF se muestra calculado automáticamente.
+- [x] La tabla de importaciones muestra filtros por estado y proveedor.
+- [x] El cambio de estado de la importación (transición aduanera) funciona desde un modal de confirmación.
+- [~] Al liberar una importación, el sistema genera la entrada de stock correspondiente (verificado directamente en `MovimientoInventario`); la vista `/stock` en sí es de Sprint 3 (S3-T06) y aún no existe.
+- [x] Un Agente Aduanal puede subir documentos (PDF/imagen) y verlos en la vista de detalle.
+- [x] Un Contador puede registrar tributos y ejecutar `calcular-costeo`; el resultado se muestra en pantalla.
+- [x] El test E2E del flujo completo de importación (registrar → liberar) pasa en Playwright.
 
 ### Tareas detalladas
 
@@ -80,6 +80,8 @@
 | S2-T07 | E2E Playwright: flujo registrar → en tránsito → en aduana → liberar | Ambos | `feature/s2-e2e-importacion` | 5 |
 
 **Total SP Sprint 2:** 39
+
+> **Nota de ejecución (2026-08-30):** Sprint 2 se cerró completo en una sola sesión. La columna "Responsable" refleja la planificación original; en la práctica Shirley implementó las 7 tareas (incluidas S2-T02, S2-T04, S2-T06 y S2-T07, planificadas para Oscar) a pedido explícito, para adelantar el sprint. Antes de integrar a `dev`, verificar con Oscar si ya había avance propio en `feature/s2-form-importacion`, `feature/s2-documentos`, `feature/s2-tipo-cambio` o `feature/s2-e2e-importacion` para evitar conflictos.
 
 ---
 

@@ -119,15 +119,18 @@ cd frontend && npm run build
 ## 3. Suite de Pruebas E2E (Playwright)
 
 ```bash
-cd tests && npx playwright test
+npm install    # primera vez: instala @playwright/test desde la raíz del repo
+npx playwright test
 ```
+
+`playwright.config.ts` vive en la raíz del repo con `testDir: './tests'` — el comando se ejecuta **desde la raíz**, no desde `tests/` (`cd tests && npx playwright test` no encuentra la config y falla).
 
 **Criterio de aceptación:** Todos los tests definidos para el sprint actual pasan en modo headless. Los tests de sprints futuros se pueden marcar con `.skip` temporalmente.
 
 Para correr solo un archivo de pruebas:
 
 ```bash
-npx playwright test e2e/auth.spec.ts
+npx playwright test tests/auth.spec.ts
 ```
 
 Para ver el reporte HTML de la última ejecución:

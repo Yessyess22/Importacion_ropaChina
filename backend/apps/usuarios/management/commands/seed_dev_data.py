@@ -33,7 +33,7 @@ class Command(BaseCommand):
             )
 
         from apps.catalogo.models import Prenda, VarianteProducto
-        from apps.terceros.models import Proveedor
+        from apps.terceros.models import ClienteMayorista, Proveedor
         from apps.usuarios.models import Rol, Usuario
 
         for nombre in ROLES:
@@ -53,6 +53,39 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write("Usuario 'admin' ya existe, no se modifica.")
+
+        # Cuenta de prueba con rol Cliente Mayorista, usada por la suite E2E
+        # de Playwright (`tests/auth.spec.ts`, escenario E4) para validar la
+        # restricción de rutas por rol. La contraseña es fija a propósito:
+        # es una cuenta de solo pruebas, sin privilegios, gateada por el
+        # `settings.DEBUG` check al inicio de este comando.
+        rol_cliente = Rol.objects.get(nombre="Cliente Mayorista")
+        cliente_password = os.environ.get("DJANGO_DEV_CLIENTE_PASSWORD") or "TestPass123!"
+        if not Usuario.objects.filter(username="cliente_test").exists():
+            usuario_cliente = Usuario.objects.create_user(
+                username="cliente_test",
+                email="cliente_test@example.com",
+                password=cliente_password,
+                rol=rol_cliente,
+            )
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Usuario de prueba creado -> username: cliente_test / password: {cliente_password}"
+                )
+            )
+        else:
+            usuario_cliente = Usuario.objects.get(username="cliente_test")
+            self.stdout.write("Usuario 'cliente_test' ya existe, no se modifica.")
+
+        ClienteMayorista.objects.get_or_create(
+            nit="DEV-0002",
+            defaults={
+                "razon_social": "Cliente Demo Mayorista",
+                "tipo_negocio": "Boutique",
+                "pedido_minimo_modelo": 10,
+                "usuario": usuario_cliente,
+            },
+        )
 
         proveedor, _ = Proveedor.objects.get_or_create(
             nit="DEV-0001",

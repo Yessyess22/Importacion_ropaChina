@@ -6,9 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema necesarias para compilar psycopg[binary] y libpq
+# Dependencias del sistema necesarias para compilar psycopg[binary], libpq
+# y para que el healthcheck de Docker pueda ejecutar curl.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev gcc \
+    && apt-get install -y --no-install-recommends libpq-dev gcc curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt .

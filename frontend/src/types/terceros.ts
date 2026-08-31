@@ -34,3 +34,16 @@ export interface AgenteAduanal {
   activo: boolean
   numero_registro: string
 }
+
+export type TipoTransporte = 'MARITIMO' | 'AEREO' | 'TERRESTRE'
+
+export interface Transportista {
+  id: number
+  razon_social: string
+  nit: string
+  telefono: string
+  email: string
+  direccion: string
+  activo: boolean
+  tipo_transporte: TipoTransporte | ''
+}
