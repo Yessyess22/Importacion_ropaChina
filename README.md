@@ -5,15 +5,16 @@ Integra el flujo de **importación → gestión aduanera → costeo → inventar
 catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
 talla y color, y la regla de cantidad mínima de compra por modelo.
 
-> **Estado actual: Fase 4 — API REST del sistema.**
-> Sobre la autenticación de la Fase 3 ([docs/authentication.md](docs/authentication.md))
-> se implementó la API REST de negocio bajo `/api/v1/` (catálogo,
-> proveedores/clientes, importaciones con cálculo de CIF en backend,
-> documentos, costeo/tributos/tipo de cambio, inventario, pedidos con
-> validación de cantidad mínima y reserva de stock, y reportes), con
-> paginación, filtros, permisos por rol y documentación OpenAPI (ver
-> [docs/api.md](docs/api.md)). El frontend de negocio (más allá del login)
-> corresponde a fases futuras.
+> **Estado actual: Fase 5 — Sprint 1 completado al 100%.**
+> El backend REST (`/api/v1/`) está estable y documentado desde la Fase 4
+> (ver [docs/api.md](docs/api.md)). En la Fase 5 Sprint 1 se construyó el
+> frontend de negocio: Layout Shell con sidebar por rol, login con Sonner,
+> y los CRUDs premium de datos maestros — **Usuarios, Proveedores, Clientes
+> Mayoristas y Agentes Aduanales** — con Action Bar Card, Interactive Table
+> con hover, Dialog Shell `sm:max-w-150` en grid de 2 columnas, control de
+> permisos por rol, AlertDialog de confirmación y toasts Sonner para errores
+> DRF. Tests Pytest (7/7) y E2E Playwright (4 escenarios de auth) en verde.
+> **Sprint 2 activo:** Importaciones, Documentos y Costeo.
 
 ## Stack tecnológico
 
@@ -24,7 +25,7 @@ talla y color, y la regla de cantidad mínima de compra por modelo.
 | Frontend | React 19, TypeScript, Vite |
 | Estilos / UI | Tailwind CSS v4, shadcn/ui |
 | Infraestructura | Docker, Docker Compose, Nginx |
-| Testing (fases futuras) | Pytest / Django Test, Playwright |
+| Testing | Pytest + pytest-django, Playwright (E2E) |
 
 ## Arquitectura
 
@@ -63,13 +64,16 @@ trendy-import/
 │       ├── hooks/           # useAuth
 │       ├── services/        # authService (login/logout/me), api.ts (cliente HTTP /api/v1/)
 │       ├── components/      # ProtectedRoute, ui/ (shadcn)
-│       ├── pages/            # Login
+│       ├── pages/
+│       │   ├── Login.tsx
+│       │   ├── admin/          # Usuarios (CRUD premium)
+│       │   └── terceros/       # Proveedores, ClientesMayoristas, AgentesAduanales (CRUDs premium)
 │       ├── types/            # auth.ts, api.ts, catalogo.ts, terceros.ts, importaciones.ts, costeo.ts, pedidos.ts
 │       └── layouts/ utils/ lib/
+├── tests/              # Pruebas E2E — auth.spec.ts (Playwright, 4 escenarios)
 ├── nginx/              # nginx.conf (reverse proxy)
 ├── docker/             # Dockerfiles de backend y frontend
 ├── docs/               # database.md, authentication.md, api.md, postman/
-├── tests/              # Pruebas E2E (Playwright, fase futura)
 ├── docker-compose.yml
 ├── .env / .env.example
 └── README.md
@@ -122,8 +126,14 @@ docker compose exec backend python manage.py <comando>
 docker compose exec backend python manage.py makemigrations
 docker compose exec backend python manage.py migrate
 
-# Ejecutar la suite de pruebas de modelos
+# Ejecutar la suite de pruebas unitarias del backend
 docker compose exec backend python manage.py test apps
+
+# Tests unitarios con pytest (auditoria, etc.)
+docker compose exec backend pytest apps/auditoria/ -v
+
+# Tests E2E con Playwright (requiere stack Docker activo en http://localhost)
+npx playwright test tests/auth.spec.ts
 
 # Cargar datos mínimos de desarrollo (roles, admin de prueba, ejemplo de catálogo)
 # Solo funciona con DJANGO_DEBUG=True; nunca usar en producción.
@@ -159,12 +169,16 @@ debería quedar expuesto.
 ## Verificación rápida
 
 - `http://localhost/` → interfaz de React; sin sesión redirige a `/login`.
+- `http://localhost/login` → formulario de acceso (usuario de prueba: `admin / AdminDesarrolloUPDS2026!`).
+- `http://localhost/usuarios` → CRUD premium de Usuarios (solo rol Administrador).
+- `http://localhost/proveedores` → CRUD premium de Proveedores (Admin + Operador).
+- `http://localhost/clientes-mayoristas` → CRUD premium de Clientes Mayoristas (solo Admin).
+- `http://localhost/agentes-aduanales` → CRUD premium de Agentes Aduanales (Admin + Operador).
 - `http://localhost/api/health/` → `{"status": "ok", "service": "trendy-import-backend"}`.
-- `http://localhost/api/v1/prendas/` → catálogo (requiere sesión iniciada).
-- `http://localhost/api/docs/` → documentación interactiva (Swagger UI) de toda la API v1.
-- `http://localhost/admin/` → panel de administración de Django (usuarios, roles, permisos).
-- Autenticación: ver [docs/authentication.md](docs/authentication.md) para el flujo completo de login/logout/`/me` y cómo probarlo.
-- API de negocio: ver [docs/api.md](docs/api.md) para endpoints, permisos por rol, filtros/paginación y las reglas de negocio que siempre valida el backend (CIF, tributos, cantidad mínima, reserva de stock).
+- `http://localhost/api/docs/` → documentación interactiva Swagger UI de la API v1 completa.
+- `http://localhost/admin/` → panel de administración Django (usuarios, roles, permisos).
+- Autenticación: ver [docs/authentication.md](docs/authentication.md) para el flujo completo de login/logout/`/me`.
+- API de negocio: ver [docs/api.md](docs/api.md) para endpoints, permisos por rol, filtros y reglas de negocio.
 
 ## Estado actual del proyecto
 
@@ -176,11 +190,18 @@ debería quedar expuesto.
 - [x] Modelos de dominio, migraciones, Django Admin y pruebas básicas (Fase 2 — ver [docs/database.md](docs/database.md))
 - [x] Autenticación por sesión, roles y permisos por rol en el backend, rutas protegidas en el frontend (Fase 3 — ver [docs/authentication.md](docs/authentication.md))
 - [x] API REST `/api/v1/` para catálogo, terceros, importaciones (con CIF calculado en backend), documentos, costeo/tributos/tipo de cambio, inventario, pedidos (mínimo por modelo + reserva de stock) y reportes; paginación, filtros, permisos por rol y documentación OpenAPI (Fase 4 — ver [docs/api.md](docs/api.md))
-- [ ] Frontend de negocio completo (más allá del login) y pruebas E2E con Playwright (fases futuras)
+- [x] **Fase 5 — Sprint 1 completado:** Layout Shell con sidebar filtrado por rol y login con Sonner; CRUDs premium de datos maestros (`/usuarios`, `/proveedores`, `/clientes-mayoristas`, `/agentes-aduanales`) con Action Bar Card, Interactive Table, Dialog Shell grid 2 col, AlertDialog de confirmación y toasts Sonner; tests Pytest 7/7 y 4 escenarios E2E Playwright en verde
+- [ ] **Fase 5 — Sprint 2 (activo):** Vistas transaccionales — Importaciones, Documentos y Costeo
+- [ ] **Fase 5 — Sprint 3:** Catálogo de prendas, Pedidos mayoristas e Inventario
+- [ ] Throttling / rate limiting para producción, notificaciones de estado de pedido
 
-## Fases futuras
+## Progreso por sprint (Fase 5)
 
-- **Fase 5+:** Frontend de negocio (catálogo, importaciones, pedidos, etc. consumiendo `frontend/src/services/api.ts`), pruebas E2E (Playwright), throttling/rate limiting para producción, notificaciones reales de estado de pedido.
+| Sprint | Foco | Estado |
+|--------|------|--------|
+| Sprint 1 | Layout Shell + CRUDs maestros (Usuarios, Proveedores, Clientes, Agentes) | ✅ Completado 2026-08-30 |
+| Sprint 2 | Importaciones, Documentos, Costeo | 🚧 Activo |
+| Sprint 3 | Catálogo, Pedidos, Inventario | 🔜 Pendiente |
 
 ---
 
