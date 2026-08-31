@@ -23,9 +23,9 @@
 
 **Progreso Sprint 1 (resuelto):**
 - ✅ `/usuarios` — CRUD completo: tabla paginada, modal alta/edición (grid 2 col), AlertDialog toggle estado, toasts. Backend: `UsuarioWriteSerializer` + `ModelViewSet`.
-- ✅ `/proveedores` — CRUD completo con AlertDialog.
-- ✅ `/clientes-mayoristas` — CRUD completo.
-- ✅ `/agentes-aduanales` — CRUD completo.
+- ✅ `/proveedores` — CRUD completo con AlertDialog. **Rediseño premium completado 2026-08-30:** Action Bar Card `p-6 shadow-primary/5`, Interactive Table `hover:bg-secondary/40` + cabeceras `bg-muted/50 font-semibold`, columna "Ciudad / País" combinada, icono `Power` para toggle lógico, Dialog Shell `sm:max-w-150` con grid 2 columnas y foco `ring-primary`. Vista 100% funcional con diseño premium unificado.
+- ✅ `/clientes-mayoristas` — CRUD completo. **Rediseño premium completado 2026-08-30:** Consistencia visual alineada a la Ley de UI/UX; Action Bar Card con sombras de marca (`shadow-primary/5`); Select controlado shadcn/ui para tipo de negocio (`Boutique`, `Tienda Física`, `Online`) en reemplazo del `datalist` nativo; modal `sm:max-w-150` (600 px) en rejilla simétrica de 2 columnas; restricciones de escritura robustas (`canWrite` exclusivo para Administrador); AlertDialog con mensaje contextual de impacto en pedidos; toasts Sonner enriquecidos con errores DRF mapeados vía `extractErrorMessage`. Vista 100% funcional con diseño premium unificado.
+- ✅ `/agentes-aduanales` — CRUD completo. **Rediseño premium completado 2026-08-30:** Consistencia visual alineada a la Ley de UI/UX; Action Bar Card `p-6 shadow-primary/5`; columna Contacto de dos líneas (teléfono + email); `canWrite` corregido a Admin + Operador; Dialog Shell `sm:max-w-150` grid 2 col (Razón Social/NIT · Registro Aduanero/Teléfono · Email full-width requerido · Dirección full-width opcional); icono `Power` toggle; AlertDialog contextual de importaciones; toasts Sonner enriquecidos. Vista 100% funcional con diseño premium unificado.
 
 **Progreso Sprint 2 (resuelto):**
 - ✅ `/importaciones` (S2-T01) — DataTable con filtros de estado/proveedor y búsqueda.

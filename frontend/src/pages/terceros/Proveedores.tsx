@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Power, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
@@ -41,13 +41,13 @@ type ProveedorForm = Omit<Proveedor, 'id'>
 const EMPTY_FORM: ProveedorForm = {
   razon_social: '',
   nit: '',
+  fabrica: '',
+  ciudad_origen: '',
+  pais: 'China',
   telefono: '',
   email: '',
   direccion: '',
   activo: true,
-  fabrica: '',
-  ciudad_origen: '',
-  pais: '',
 }
 
 const PAGE_SIZE = 20
@@ -132,7 +132,9 @@ export function Proveedores() {
       setDialogOpen(false)
       await fetchItems()
     } catch (err) {
-      toast.error('Error al guardar', { description: err instanceof Error ? err.message : undefined })
+      toast.error('Error al guardar', {
+        description: err instanceof Error ? err.message : undefined,
+      })
     } finally {
       setSubmitting(false)
     }
@@ -142,9 +144,7 @@ export function Proveedores() {
     if (!toggleTarget) return
     try {
       await api.patch(`/proveedores/${toggleTarget.id}/`, { activo: !toggleTarget.activo })
-      toast.success(
-        toggleTarget.activo ? 'Proveedor desactivado.' : 'Proveedor activado.'
-      )
+      toast.success(toggleTarget.activo ? 'Proveedor desactivado.' : 'Proveedor activado.')
       await fetchItems()
     } catch (err) {
       toast.error('No se pudo cambiar el estado', {
@@ -155,6 +155,8 @@ export function Proveedores() {
     }
   }
 
+  const colSpan = canWrite ? 6 : 5
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -164,7 +166,8 @@ export function Proveedores() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-6 shadow-sm shadow-primary/5">
         <Input
           placeholder="Buscar por razón social o NIT…"
           value={search}
@@ -172,47 +175,58 @@ export function Proveedores() {
           className="max-w-xs"
         />
         {canWrite && (
-          <Button onClick={openCreate}>
+          <Button
+            onClick={openCreate}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+          >
             <Plus className="size-4" />
             Nuevo Proveedor
           </Button>
         )}
       </div>
 
+      {/* Data Grid */}
       <div className="rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Razón Social</TableHead>
-              <TableHead>NIT</TableHead>
-              <TableHead>País</TableHead>
-              <TableHead>Fábrica</TableHead>
-              <TableHead>Estado</TableHead>
-              {canWrite && <TableHead className="text-right">Acciones</TableHead>}
+              <TableHead className="bg-muted/50 font-semibold">Razón Social</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">NIT</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Fábrica</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Ciudad / País</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Estado</TableHead>
+              {canWrite && (
+                <TableHead className="bg-muted/50 font-semibold text-right">Acciones</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: canWrite ? 6 : 5 }).map((__, j) => (
+                  {Array.from({ length: colSpan }).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canWrite ? 6 : 5} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={colSpan} className="py-8 text-center text-sm text-muted-foreground">
                   {search ? `Sin resultados para "${search}"` : 'No hay proveedores registrados.'}
                 </TableCell>
               </TableRow>
             ) : (
               items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.razon_social}</TableCell>
+                <TableRow
+                  key={item.id}
+                  className="transition-colors duration-200 hover:bg-secondary/40"
+                >
+                  <TableCell className="font-semibold">{item.razon_social}</TableCell>
                   <TableCell className="font-mono text-sm">{item.nit}</TableCell>
-                  <TableCell>{item.pais}</TableCell>
                   <TableCell>{item.fabrica}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {[item.ciudad_origen, item.pais].filter(Boolean).join(', ')}
+                  </TableCell>
                   <TableCell>
                     {item.activo ? (
                       <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
@@ -227,16 +241,21 @@ export function Proveedores() {
                   {canWrite && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => openEdit(item)}
+                          title="Editar proveedor"
+                        >
                           <Pencil className="size-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-sm"
                           onClick={() => setToggleTarget(item)}
-                          className="text-xs"
+                          title={item.activo ? 'Desactivar proveedor' : 'Activar proveedor'}
                         >
-                          {item.activo ? 'Desactivar' : 'Activar'}
+                          <Power className="size-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -252,10 +271,20 @@ export function Proveedores() {
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Página {currentPage} de {totalPages}</span>
           <div className="flex gap-1">
-            <Button variant="outline" size="icon-sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
               <ChevronLeft className="size-4" />
             </Button>
-            <Button variant="outline" size="icon-sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
               <ChevronRight className="size-4" />
             </Button>
           </div>
@@ -264,45 +293,115 @@ export function Proveedores() {
 
       {/* Modal alta / edición */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-150">
           <DialogHeader>
             <DialogTitle>{editItem ? 'Editar Proveedor' : 'Nuevo Proveedor'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="razon_social">Razón Social <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="razon_social" value={form.razon_social} onChange={(e) => setField('razon_social', e.target.value)} required />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* Fila 1: Razón Social | NIT */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="razon_social">
+                  Razón Social <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="razon_social"
+                  value={form.razon_social}
+                  onChange={(e) => setField('razon_social', e.target.value)}
+                  required
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="nit">NIT <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="nit" value={form.nit} onChange={(e) => setField('nit', e.target.value)} required />
+                <Label htmlFor="nit">
+                  NIT <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="nit"
+                  value={form.nit}
+                  onChange={(e) => setField('nit', e.target.value)}
+                  required
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
+              </div>
+
+              {/* Fila 2: Fábrica | Ciudad de Origen */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="fabrica">
+                  Fábrica <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="fabrica"
+                  value={form.fabrica}
+                  onChange={(e) => setField('fabrica', e.target.value)}
+                  required
+                  placeholder="Fábrica Demo"
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="pais">País <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="pais" value={form.pais} onChange={(e) => setField('pais', e.target.value)} required placeholder="China" />
+                <Label htmlFor="ciudad_origen">
+                  Ciudad de Origen <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ciudad_origen"
+                  value={form.ciudad_origen}
+                  onChange={(e) => setField('ciudad_origen', e.target.value)}
+                  required
+                  placeholder="Guangzhou"
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="fabrica">Fábrica <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="fabrica" value={form.fabrica} onChange={(e) => setField('fabrica', e.target.value)} required />
-              </div>
+
+              {/* Fila 3: País | Teléfono */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ciudad_origen">Ciudad de origen</Label>
-                <Input id="ciudad_origen" value={form.ciudad_origen} onChange={(e) => setField('ciudad_origen', e.target.value)} />
+                <Label htmlFor="pais">
+                  País <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="pais"
+                  value={form.pais}
+                  onChange={(e) => setField('pais', e.target.value)}
+                  required
+                  placeholder="China"
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="telefono">Teléfono</Label>
-                <Input id="telefono" value={form.telefono} onChange={(e) => setField('telefono', e.target.value)} />
+                <Input
+                  id="telefono"
+                  value={form.telefono}
+                  onChange={(e) => setField('telefono', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
+
+              {/* Fila 4: Email (ancho completo) */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField('email', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
+
+              {/* Fila 5: Dirección (ancho completo) */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="direccion">Dirección</Label>
-                <Input id="direccion" value={form.direccion} onChange={(e) => setField('direccion', e.target.value)} />
+                <Input
+                  id="direccion"
+                  value={form.direccion}
+                  onChange={(e) => setField('direccion', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
             </div>
+
             <DialogFooter>
               <Button type="submit" disabled={submitting} className="min-w-25">
                 {submitting ? (
@@ -317,15 +416,19 @@ export function Proveedores() {
         </DialogContent>
       </Dialog>
 
-      {/* AlertDialog toggle activo */}
-      <AlertDialog open={!!toggleTarget} onOpenChange={(open) => { if (!open) setToggleTarget(null) }}>
+      {/* AlertDialog toggle de estado */}
+      <AlertDialog
+        open={!!toggleTarget}
+        onOpenChange={(open) => { if (!open) setToggleTarget(null) }}
+      >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {toggleTarget?.activo ? '¿Desactivar proveedor?' : '¿Activar proveedor?'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {toggleTarget?.razon_social}
+              ¿Está seguro de cambiar el estado de <strong>{toggleTarget?.razon_social}</strong>?
+              Esto afectará su visibilidad en nuevos registros.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

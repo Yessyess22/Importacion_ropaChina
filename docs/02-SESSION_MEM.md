@@ -25,9 +25,9 @@
 - [x] **S1-T03** Crear `AuthLayout` en `frontend/src/layouts/AuthLayout.tsx` y refactorizar `Login.tsx` con Sonner toast. *(2026-08-30 — Oscar)*
 - [x] **S1-T04** Crear `frontend/src/utils/formatters.ts` — `formatCurrency` BOB, `formatDate` español, `formatEstado` legible. *(2026-08-30 — Oscar)*
 - [x] **S1-T05** Crear la vista `frontend/src/pages/admin/Usuarios.tsx` — tabla paginada con badge de rol por color. *(2026-08-30 — Oscar)*
-- [x] **S1-T06** Crear la vista `frontend/src/pages/terceros/Proveedores.tsx` — DataTable + Dialog modal + AlertDialog toggle activo. *(2026-08-30 — Oscar)*
-- [x] **S1-T07** Crear la vista `frontend/src/pages/terceros/ClientesMayoristas.tsx` — DataTable + modal con `pedido_minimo_modelo` (min=1). *(2026-08-30 — Oscar)*
-- [x] **S1-T08** Crear la vista `frontend/src/pages/terceros/AgentesAduanales.tsx` — DataTable + Dialog + AlertDialog. *(2026-08-30 — Oscar)*
+- [x] **S1-T06** Rediseño premium de `frontend/src/pages/terceros/Proveedores.tsx` — Action Bar Card `p-6 shadow-primary/5`, Interactive Table `hover:bg-secondary/40` + cabeceras `bg-muted/50 font-semibold`, Dialog Shell `sm:max-w-150` grid 2 col, icono `Power` toggle, foco `ring-primary`, AlertDialog suspensión lógica, toasts Sonner. *(2026-08-30 — Oscar/Agente)*
+- [x] **S1-T07** Rediseño premium de `frontend/src/pages/terceros/ClientesMayoristas.tsx` — Action Bar Card `p-6 shadow-primary/5` (solo Admin), Interactive Table `hover:bg-secondary/40`, Dialog Shell `sm:max-w-150` grid 2 col con Select shadcn/ui para tipo negocio, icono `Power` toggle, foco `ring-primary`, AlertDialog contextual de pedidos, toasts Sonner. *(2026-08-30 — Oscar/Agente)*
+- [x] **S1-T08** Rediseño premium de `frontend/src/pages/terceros/AgentesAduanales.tsx` — Action Bar Card `p-6 shadow-primary/5` (Admin + Operador), columna Contacto de dos líneas (tel + email), Dialog Shell `sm:max-w-150` grid 2 col (Razón Social/NIT · Registro/Tel · Email full-width · Dir full-width), icono `Power` toggle, AlertDialog contextual de importaciones, foco `ring-primary`, toasts Sonner. Sprint 1 cerrado al 100%. *(2026-08-30 — Oscar/Agente)*
 - [x] **S1-T09** Escribir tests E2E con Playwright para el flujo de login y protección de rutas. *(2026-08-30 — Oscar)*
 - [x] **S1-T10** Tests `apps/auditoria/tests.py` — cobertura del servicio `registrar()`. *(2026-08-30 — Oscar)*
 
@@ -100,6 +100,9 @@ dev                          ← rama de integración
 - **Fix healthcheck Docker ✅:** `curl` reemplazado por `urllib.request` en healthcheck del backend (`python:3.12-slim` no incluye `curl`). Stack completo levanta sin errores.
 - **Fix login 404 ✅:** `VITE_API_URL` corregido de `/api/v1` a `/api`. `authService.ts` desacoplado de env var — usa `AUTH_BASE='/api/auth'`. Login funcional verificado en navegador.
 - **UI AuthLayout ✅:** Panel izquierdo rediseñado — `bg-zinc-950`, orbes decorativos, hero text, feature list y 4 stats.
+- **S1-T06 ✅ (rediseño premium):** `Proveedores.tsx` rediseñado bajo Ley de Consistencia Visual — Action Bar Card, tabla interactiva con hover, Dialog Shell `sm:max-w-150` grid 2 col, icono `Power` para toggle, AlertDialog con mensaje contextual, toasts Sonner. `tsc --noEmit` — 0 errores.
+- **S1-T07 ✅ (rediseño premium):** `ClientesMayoristas.tsx` rediseñado — Action Bar Card solo Admin, Select shadcn/ui para tipo de negocio, Dialog Shell grid 2 col, icono `Power` toggle, AlertDialog contextual de pedidos, payload sin campo `usuario`. `tsc --noEmit` — 0 errores.
+- **S1-T08 ✅ (rediseño premium — cierre de Sprint 1):** `AgentesAduanales.tsx` rediseñado — `canWrite` corregido a Admin + Operador, columna Contacto de dos líneas, Dialog Shell `sm:max-w-150` grid 2 col, Email marcado como requerido, Dirección como opcional, icono `Power`, AlertDialog contextual de operaciones de importación. `tsc --noEmit` — 0 errores. **Sprint 1 completado al 100%.**
 
 ---
 

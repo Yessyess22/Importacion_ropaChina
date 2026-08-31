@@ -131,9 +131,9 @@ tests/importaciones.spec.ts
 | **S1-T03** | Crear `AuthLayout.tsx` y refactorizar `Login.tsx` con Sonner toast + shadcn `Input`/`Label` | Oscar | 2026-08-30 | `main` |
 | **S1-T04** | Crear `frontend/src/utils/formatters.ts`: `formatCurrency` BOB, `formatDate` español, `formatEstado` legible | Oscar | 2026-08-30 | `main` |
 | **S1-T05** | Vista `/usuarios` — tabla paginada con rol coloreado (Badge por rol) y estado activo/inactivo | Oscar | 2026-08-30 | `main` |
-| **S1-T06** | Vista `/proveedores` — DataTable + modal alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
-| **S1-T07** | Vista `/clientes-mayoristas` — DataTable + modal con `pedido_minimo_modelo` validado (min=1) | Oscar | 2026-08-30 | `main` |
-| **S1-T08** | Vista `/agentes-aduanales` — DataTable + modal de alta/edición + AlertDialog toggle activo | Oscar | 2026-08-30 | `main` |
+| **S1-T06** | Vista `/proveedores` — Rediseño premium: Action Bar Card `shadow-primary/5`, Interactive Table `hover:bg-secondary/40` + cabeceras `bg-muted/50`, Dialog Shell `sm:max-w-150` grid 2 col (Razón Social/NIT · Fábrica/Ciudad · País/Tel · Email · Dir), icono `Power` toggle, AlertDialog suspensión lógica, foco `ring-primary`, toasts Sonner | Oscar | 2026-08-30 | `main` |
+| **S1-T07** | Vista `/clientes-mayoristas` — Rediseño premium: Action Bar Card solo Admin, Interactive Table `hover:bg-secondary/40`, Select shadcn/ui para tipo negocio (`Boutique`, `Tienda Física`, `Online`), Dialog Shell `sm:max-w-150` grid 2 col, icono `Power` toggle, AlertDialog contextual de pedidos, payload sin `usuario`, foco `ring-primary`, toasts Sonner | Oscar | 2026-08-30 | `main` |
+| **S1-T08** | Vista `/agentes-aduanales` — Rediseño premium (cierre de Sprint 1): Action Bar Card `p-6 shadow-primary/5` (Admin + Operador), Interactive Table `hover:bg-secondary/40` + cabeceras `bg-muted/50`, columna Contacto de dos líneas (tel + email), Dialog Shell `sm:max-w-150` grid 2 col (Razón Social/NIT · Registro Aduanero/Tel · Email full-width requerido · Dir full-width opcional), icono `Power` toggle, AlertDialog contextual de operaciones de importación, foco `ring-primary`, toasts Sonner | Oscar | 2026-08-30 | `main` |
 | **S1-T09** | E2E Playwright: login válido → dashboard, credenciales inválidas → Toast, logout con AlertDialog, protección de ruta por rol | Oscar | 2026-08-30 | `main` |
 | **S1-T10** | Tests unitarios `apps/auditoria/tests.py` — 7/7 PASSED: creación, SET_NULL, GenericFK | Oscar | 2026-08-30 | `main` |
 
