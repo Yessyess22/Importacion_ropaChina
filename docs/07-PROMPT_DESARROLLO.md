@@ -67,11 +67,18 @@ Las siguientes reglas nunca se deben violar. Si una tarea parece requerirlo, det
 - Valores de negocio codificados como constantes en el cliente (precios, stocks, catálogos, roles). Todo viene de `/api/v1/`.
 - Llamadas directas a `fetch()` o `axios` dentro de componentes. Solo se usa `api.ts` centralizado.
 - El uso de `as any` o `@ts-ignore` sin comentario justificativo.
+- Utilizar componentes de formulario que no implementen la clase de foco unificado (`focus-visible:ring-primary focus-visible:border-primary`).
+- Crear botones de submit en formularios que no incluyan un indicador visual de carga (`loading state` con spinner `Loader2`) al procesar peticiones HTTP.
+- Hardcodear anchos de modales inferiores a `sm:max-w-[500px]` para el llenado de información comercial.
+- Diseñar tablas de datos de negocio que no cuenten con fila de acciones con iconos normalizados de `lucide-react`.
+- Hardcodear códigos hexadecimales (`#RGB`), colores absolutos de Tailwind (`bg-pink-600`, `text-gray-900`) o estilos inline en componentes de módulos de negocio. Solo tokens HSL de `index.css`.
 
 **OBLIGATORIO:**
 - `credentials: 'include'` en todas las peticiones HTTP.
 - Header `X-CSRFToken` en todas las peticiones mutantes (POST, PATCH, PUT, DELETE).
 - Componentes de notificación accesibles (Toast para éxito/error, `AlertDialog` para confirmaciones destructivas).
+- Heredar y aplicar los estilos de badge con colores pastel configurados para cada rol, estado o categoría en el catálogo y los módulos de transacciones. No se admiten badges con colores absolutos.
+- Mapear las validaciones de error detalladas devueltas por Django REST Framework a través de la función `extractErrorMessage` de `api.ts`, exponiéndolas mediante Toasts enriquecidos de Sonner. Nunca exponer mensajes de error crudos directamente en la UI.
 
 ---
 

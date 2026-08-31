@@ -58,6 +58,26 @@ Estandarización mandatoria para asegurar la consistencia del desarrollo colabor
 *   **Estilos Limpios:** Uso exclusivo de clases utilitarias de Tailwind CSS v4 [13]. Queda prohibido el uso de estilos CSS inline o selectores arbitrarios [13].
 *   **Servicios API centralizados:** Las llamadas HTTP se agrupan en `frontend/src/services/api.ts` y derivados [13, 101, 102]. No se permite el uso directo de `fetch` o `axios` aislados dentro de componentes [13].
 
+##### 🎨 Ley de Consistencia Visual y Reutilización UI/UX (Obligatoria en todos los módulos)
+
+Esta ley tiene carácter de mandato técnico de repositorio. Toda pantalla nueva —Catálogo, Importaciones, Pedidos, Costeos— debe cumplirla sin excepción.
+
+*   **Centralización Temática:** El diseño estético de Trendy Import SRL se rige estrictamente por la paleta HSL definida en `frontend/src/index.css`. Está rotundamente prohibido usar estilos inline, colores hexadecimales directos (`#RGB`) o clases de color absoluto de Tailwind (`bg-pink-600`, `text-gray-900`) en componentes de negocio. Se deben utilizar exclusivamente los tokens de diseño de marca: `bg-primary`, `bg-secondary`, `bg-card`, `text-muted-foreground`, `text-primary-foreground`, `border`, `rounded-xl`, etc.
+
+*   **Esqueleto Estándar de CRUDs:** Toda nueva pantalla de negocio hereda exactamente la misma estructura de tres bloques construida en el módulo de Usuarios:
+
+    1.  **Tarjeta de Cabecera (Action Bar Card):** Buscador e inputs de control agrupados en una tarjeta con clases `bg-card border rounded-xl shadow-sm shadow-primary/5 p-6 mb-6`. El buscador y el botón de creación principal se distribuyen horizontalmente dentro de esta tarjeta.
+
+    2.  **Grilla de Datos Premium (Interactive Table):** Las filas de la tabla deben incluir hover animado uniforme (`hover:bg-secondary/40 transition-colors duration-200`). Los encabezados deben usar `bg-muted/50 font-semibold`. Los badges de estado, rol o categoría deben utilizar colores pastel con bordes suaves, sin colores absolutos. Los controles de paginación deben consumir los query strings del backend.
+
+    3.  **Formularios Modales Adaptativos (Dialog Shell):** Todo modal de formulario (`Dialog`) debe:
+        *   Restringir su ancho mínimo a `sm:max-w-[600px]` (o superior para datos extensos) para evitar layouts asfixiados.
+        *   Estructurarse internamente con rejilla responsiva de dos columnas: `grid grid-cols-1 sm:grid-cols-2 gap-4`.
+        *   Marcar cada campo obligatorio con un asterisco de color de alerta (`text-destructive`).
+        *   Incluir un spinner animado (`Loader2` de `lucide-react`) que bloquee el botón de submit durante peticiones activas para prevenir dobles envíos.
+
+*   **Gestión Unificada de Errores y Notificaciones:** Todos los formularios de todos los módulos redirigen sus flujos de error a través de la función centralizada `extractErrorMessage` de `api.ts`. Las validaciones de campo devueltas por Django REST Framework se exponen uniformemente mediante Toasts enriquecidos de Sonner. Queda prohibido exponer mensajes de error crudos directamente en la UI.
+
 ---
 
 ### 🛡️ 4. REGLAS DE NEGOCIO E INTEGRIDAD DE DATOS

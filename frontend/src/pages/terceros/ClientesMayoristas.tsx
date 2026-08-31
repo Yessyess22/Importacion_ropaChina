@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Power, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
@@ -35,37 +35,44 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-// usuario es read_only en el backend — no se incluye en el payload
+// usuario es read_only en el backend — nunca se incluye en el payload
 type ClienteForm = {
   razon_social: string
   nit: string
+  tipo_negocio: string
+  pedido_minimo_modelo: number
   telefono: string
   email: string
   direccion: string
   activo: boolean
-  tipo_negocio: string
-  pedido_minimo_modelo: number
 }
 
 const EMPTY_FORM: ClienteForm = {
   razon_social: '',
   nit: '',
+  tipo_negocio: '',
+  pedido_minimo_modelo: 1,
   telefono: '',
   email: '',
   direccion: '',
   activo: true,
-  tipo_negocio: '',
-  pedido_minimo_modelo: 1,
 }
 
-const TIPOS_NEGOCIO = ['Tienda Física', 'Boutique', 'Revendedora Online', 'Mayorista Mixto', 'Otro']
+const TIPOS_NEGOCIO = ['Boutique', 'Tienda Física', 'Online'] as const
 
 const PAGE_SIZE = 20
 
 export function ClientesMayoristas() {
   const { role } = useAuth()
-  const canWrite = role === 'Administrador' || role === 'Operador de Comercio Exterior'
+  const canWrite = role === 'Administrador'
 
   const [items, setItems] = useState<ClienteMayorista[]>([])
   const [loading, setLoading] = useState(true)
@@ -123,12 +130,12 @@ export function ClientesMayoristas() {
     setForm({
       razon_social: item.razon_social,
       nit: item.nit,
+      tipo_negocio: item.tipo_negocio,
+      pedido_minimo_modelo: item.pedido_minimo_modelo,
       telefono: item.telefono,
       email: item.email,
       direccion: item.direccion,
       activo: item.activo,
-      tipo_negocio: item.tipo_negocio,
-      pedido_minimo_modelo: item.pedido_minimo_modelo,
     })
     setDialogOpen(true)
   }
@@ -155,7 +162,9 @@ export function ClientesMayoristas() {
       setDialogOpen(false)
       await fetchItems()
     } catch (err) {
-      toast.error('Error al guardar', { description: err instanceof Error ? err.message : undefined })
+      toast.error('Error al guardar', {
+        description: err instanceof Error ? err.message : undefined,
+      })
     } finally {
       setSubmitting(false)
     }
@@ -176,6 +185,8 @@ export function ClientesMayoristas() {
     }
   }
 
+  const colSpan = canWrite ? 6 : 5
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -185,7 +196,8 @@ export function ClientesMayoristas() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      {/* Action Bar */}
+      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-6 shadow-sm shadow-primary/5">
         <Input
           placeholder="Buscar por razón social o NIT…"
           value={search}
@@ -193,47 +205,56 @@ export function ClientesMayoristas() {
           className="max-w-xs"
         />
         {canWrite && (
-          <Button onClick={openCreate}>
+          <Button
+            onClick={openCreate}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+          >
             <Plus className="size-4" />
-            Nuevo Cliente
+            Nuevo Cliente Mayorista
           </Button>
         )}
       </div>
 
+      {/* Data Grid */}
       <div className="rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Razón Social</TableHead>
-              <TableHead>NIT</TableHead>
-              <TableHead>Tipo de Negocio</TableHead>
-              <TableHead>Mínimo de Pedido</TableHead>
-              <TableHead>Estado</TableHead>
-              {canWrite && <TableHead className="text-right">Acciones</TableHead>}
+              <TableHead className="bg-muted/50 font-semibold">Razón Social</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">NIT</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Tipo de Negocio</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Pedido Mínimo</TableHead>
+              <TableHead className="bg-muted/50 font-semibold">Estado</TableHead>
+              {canWrite && (
+                <TableHead className="bg-muted/50 font-semibold text-right">Acciones</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: canWrite ? 6 : 5 }).map((__, j) => (
+                  {Array.from({ length: colSpan }).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={canWrite ? 6 : 5} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={colSpan} className="py-8 text-center text-sm text-muted-foreground">
                   {search ? `Sin resultados para "${search}"` : 'No hay clientes registrados.'}
                 </TableCell>
               </TableRow>
             ) : (
               items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.razon_social}</TableCell>
+                <TableRow
+                  key={item.id}
+                  className="transition-colors duration-200 hover:bg-secondary/40"
+                >
+                  <TableCell className="font-semibold">{item.razon_social}</TableCell>
                   <TableCell className="font-mono text-sm">{item.nit}</TableCell>
                   <TableCell>{item.tipo_negocio}</TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm text-muted-foreground">
                     Mín. {item.pedido_minimo_modelo} unid./modelo
                   </TableCell>
                   <TableCell>
@@ -250,16 +271,21 @@ export function ClientesMayoristas() {
                   {canWrite && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)}>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => openEdit(item)}
+                          title="Editar cliente"
+                        >
                           <Pencil className="size-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-sm"
                           onClick={() => setToggleTarget(item)}
-                          className="text-xs"
+                          title={item.activo ? 'Desactivar cliente' : 'Activar cliente'}
                         >
-                          {item.activo ? 'Desactivar' : 'Activar'}
+                          <Power className="size-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -275,10 +301,20 @@ export function ClientesMayoristas() {
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Página {currentPage} de {totalPages}</span>
           <div className="flex gap-1">
-            <Button variant="outline" size="icon-sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
               <ChevronLeft className="size-4" />
             </Button>
-            <Button variant="outline" size="icon-sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
               <ChevronRight className="size-4" />
             </Button>
           </div>
@@ -287,58 +323,112 @@ export function ClientesMayoristas() {
 
       {/* Modal alta / edición */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-150">
           <DialogHeader>
-            <DialogTitle>{editItem ? 'Editar Cliente' : 'Nuevo Cliente Mayorista'}</DialogTitle>
+            <DialogTitle>{editItem ? 'Editar Cliente Mayorista' : 'Nuevo Cliente Mayorista'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="cm_razon_social">Razón Social <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="cm_razon_social" value={form.razon_social} onChange={(e) => setField('razon_social', e.target.value)} required />
-              </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* Fila 1: Razón Social | NIT */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_nit">NIT <span className="ml-0.5 text-destructive">*</span></Label>
-                <Input id="cm_nit" value={form.nit} onChange={(e) => setField('nit', e.target.value)} required />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_tipo">Tipo de Negocio <span className="ml-0.5 text-destructive">*</span></Label>
+                <Label htmlFor="cm_razon_social">
+                  Razón Social <span className="ml-0.5 text-destructive">*</span>
+                </Label>
                 <Input
-                  id="cm_tipo"
-                  list="tipos-negocio"
-                  value={form.tipo_negocio}
-                  onChange={(e) => setField('tipo_negocio', e.target.value)}
+                  id="cm_razon_social"
+                  value={form.razon_social}
+                  onChange={(e) => setField('razon_social', e.target.value)}
                   required
-                  placeholder="Seleccionar o escribir"
+                  className="focus-visible:ring-primary focus-visible:border-primary"
                 />
-                <datalist id="tipos-negocio">
-                  {TIPOS_NEGOCIO.map((t) => <option key={t} value={t} />)}
-                </datalist>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cm_min">Mínimo de Pedido (unid./modelo) <span className="ml-0.5 text-destructive">*</span></Label>
+                <Label htmlFor="cm_nit">
+                  NIT <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="cm_nit"
+                  value={form.nit}
+                  onChange={(e) => setField('nit', e.target.value)}
+                  required
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
+              </div>
+
+              {/* Fila 2: Tipo de Negocio | Pedido Mínimo */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cm_tipo">
+                  Tipo de Negocio <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Select
+                  value={form.tipo_negocio}
+                  onValueChange={(v) => setField('tipo_negocio', v)}
+                  required
+                >
+                  <SelectTrigger
+                    id="cm_tipo"
+                    className="w-full focus-visible:ring-primary focus-visible:border-primary"
+                  >
+                    <SelectValue placeholder="Seleccionar tipo…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPOS_NEGOCIO.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cm_min">
+                  Pedido Mínimo (unid./modelo) <span className="ml-0.5 text-destructive">*</span>
+                </Label>
                 <Input
                   id="cm_min"
                   type="number"
                   min={1}
                   value={form.pedido_minimo_modelo}
-                  onChange={(e) => setField('pedido_minimo_modelo', Number(e.target.value))}
+                  onChange={(e) => setField('pedido_minimo_modelo', Math.max(1, Number(e.target.value)))}
                   required
+                  className="focus-visible:ring-primary focus-visible:border-primary"
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
+
+              {/* Fila 3: Teléfono (ancho completo) */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="cm_telefono">Teléfono</Label>
-                <Input id="cm_telefono" value={form.telefono} onChange={(e) => setField('telefono', e.target.value)} />
+                <Input
+                  id="cm_telefono"
+                  value={form.telefono}
+                  onChange={(e) => setField('telefono', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="cm_email">Email</Label>
-                <Input id="cm_email" type="email" value={form.email} onChange={(e) => setField('email', e.target.value)} />
+
+              {/* Fila 4: Email (ancho completo) */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
+                <Label htmlFor="cm_email">Correo Electrónico</Label>
+                <Input
+                  id="cm_email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField('email', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
+
+              {/* Fila 5: Dirección (ancho completo) */}
+              <div className="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="cm_direccion">Dirección</Label>
-                <Input id="cm_direccion" value={form.direccion} onChange={(e) => setField('direccion', e.target.value)} />
+                <Input
+                  id="cm_direccion"
+                  value={form.direccion}
+                  onChange={(e) => setField('direccion', e.target.value)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
               </div>
             </div>
+
             <DialogFooter>
               <Button type="submit" disabled={submitting} className="min-w-25">
                 {submitting ? (
@@ -353,14 +443,20 @@ export function ClientesMayoristas() {
         </DialogContent>
       </Dialog>
 
-      {/* AlertDialog toggle activo */}
-      <AlertDialog open={!!toggleTarget} onOpenChange={(open) => { if (!open) setToggleTarget(null) }}>
+      {/* AlertDialog toggle de estado */}
+      <AlertDialog
+        open={!!toggleTarget}
+        onOpenChange={(open) => { if (!open) setToggleTarget(null) }}
+      >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {toggleTarget?.activo ? '¿Desactivar cliente?' : '¿Activar cliente?'}
+              {toggleTarget?.activo ? '¿Desactivar cliente mayorista?' : '¿Activar cliente mayorista?'}
             </AlertDialogTitle>
-            <AlertDialogDescription>{toggleTarget?.razon_social}</AlertDialogDescription>
+            <AlertDialogDescription>
+              ¿Está seguro de cambiar el estado de <strong>{toggleTarget?.razon_social}</strong>?
+              Esto afectará su visibilidad para registrar nuevos pedidos.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
