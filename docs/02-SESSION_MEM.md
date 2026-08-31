@@ -9,12 +9,11 @@
 | Campo | Valor |
 |-------|-------|
 | **Fase** | Fase 5 — Frontend de Negocio y Pruebas E2E |
-| **Sprint activo** | **Sprint 2 de Fase 5: Operaciones de Importación, Documentos y Costeo — ✅ Cerrado** |
-| **Fecha de inicio del sprint** | 2026-09-21 (planificada) — trabajo adelantado desde 2026-08-30 |
-| **Fecha de cierre real** | 2026-08-30 (adelantado) |
+| **Sprint activo** | **Sprint 3 de Fase 5: Catálogo Mayorista y Pedidos B2B — 🔄 En curso (S3-T01 completado)** |
+| **Fecha de inicio del sprint** | 2026-10-12 (planificada) — trabajo adelantado desde 2026-08-31 |
 | **Responsables** | Shirley Yessica Escobar Gutierrez · Oscar Alejandro Segovia Villarreal |
-| **Estado del backend** | ✅ Estable — API REST v1 completa; fixes de Sprint 2: `DetalleImportacionNestedSerializer`, `MEDIA_ROOT`/`STATIC_ROOT`, `seed_dev_data` (ver notas) |
-| **Estado del frontend** | ✅ Sprint 2 completo — `/importaciones`, `/importaciones/nueva`, `/importaciones/:id`, `/documentos`, `/costeo`, `/tipo-cambio` implementadas |
+| **Estado del backend** | ✅ Estable — API REST v1 completa; fixes de Sprint 3: `PrendaSerializer.variantes` filtrado por rol, filtro combinado talla+color, `seed_dev_data` con catálogo demo (ver notas) |
+| **Estado del frontend** | 🔄 Sprint 3 en curso — `/catalogo` implementada (S3-T01); pendientes: `VarianteSelector` (S3-T02), `/pedidos/nuevo` (S3-T03), `/pedidos` (S3-T04), `/pedidos/:id` (S3-T05), `/stock` (S3-T06) |
 
 ---
 
@@ -45,11 +44,25 @@
 
 ---
 
+## Objetivos del Sprint 3 (En curso desde 2026-08-31)
+
+- [x] **S3-T01** Vista `/catalogo` — grid de prendas con filtros de talla/color/categoría contra la API; imágenes de ropa juvenil por categoría (Unsplash, sin campo de imagen en el backend). *(2026-08-31 — Shirley/Agente)*
+- [ ] **S3-T02** Componente `VarianteSelector` — tarjeta de variante con stock badge.
+- [ ] **S3-T03** Vista `/pedidos/nuevo` — carrito de pedido con validación de mínimo en cliente.
+- [ ] **S3-T04** Vista `/pedidos` — lista de pedidos con filtro de estado (diferenciada por rol).
+- [ ] **S3-T05** Vista `/pedidos/:id` — detalle de pedido + cambio de estado para staff.
+- [ ] **S3-T06** Vista `/stock` — inventario con movimientos por variante.
+- [ ] **S3-T07** E2E Playwright: flujo de pedido.
+
+> Nota: S3-T01 requirió 3 fixes de backend no previstos en la planificación original (ver `01-BITACORA_DESARROLLO.md`, entrada 2026-08-31): `PrendaSerializer.variantes` filtraba mal las variantes anidadas para el Cliente Mayorista, el queryset no exigía stock>0 a nivel de Prenda, y el filtro combinado talla+color tenía un bug de JOIN cruzado. Los tres eran necesarios para cumplir los criterios de aceptación del sprint, no alcance añadido.
+
+---
+
 ## Deuda Técnica Activa
 
 | ID | Severidad | Descripción | Responsable |
 |----|-----------|-------------|-------------|
-| GAP-1 | 🔴 Crítico | Vistas de negocio pendientes (Sprint 3+): Catálogo, Stock, Pedidos, Reportes, Bitácora | Shirley + Oscar |
+| GAP-1 | 🔴 Crítico | Vistas de negocio pendientes (Sprint 3): Stock, Pedidos (Catálogo ya resuelto en S3-T01) | Shirley + Oscar |
 | GAP-5 | 🟢 Bajo | Tests de `reportes` son mínimos (25 líneas) | Shirley |
 | GAP-9 | 🟡 Medio | `pytest` no está instalado en el contenedor backend (falta en `requirements.txt`); `apps/auditoria/tests.py` no puede ejecutarse ni con `pytest` ni con `manage.py test` (usa fixtures de pytest) | Sin asignar |
 | GAP-10 | 🟢 Bajo | `apps.terceros.tests.ClienteMayoristaApiTests.test_cliente_consulta_su_propio_registro` falla con 404 en `main` (preexistente, no introducido en Sprint 2) | Sin asignar |
@@ -124,8 +137,6 @@ dev                          ← rama de integración
 
 ## Notas de la última sesión (2026-08-30 — sesión 4, cierre de Sprint 2)
 
-Shirley pidió completar también las tareas de Oscar (S2-T02, S2-T04, S2-T06, S2-T07) para adelantar el sprint completo.
-
 - **S2-T06 ✅:** `frontend/src/pages/costeo/TipoCambio.tsx` — CRUD completo (crear/editar/eliminar) de `TipoCambio` con `AlertDialog` de confirmación de borrado. Se agregó el ítem "Tipo de Cambio" al sidebar (`AppLayout.tsx`, ícono `DollarSign`) y la ruta `/tipo-cambio` en `App.tsx` — **no existían en ninguno de los dos archivos**, a pesar de que el backend y el tipo `TipoCambio` ya existían desde Sprint 1.
 - **S2-T04 ✅:** `frontend/src/pages/documentos/Documentos.tsx` — selector de operación, formulario de adjunto multipart (tipo, nombre, fecha de emisión, archivo vía `FormData`), tabla de documentos con descarga y eliminación (bloqueada si la operación está `LIBERADA`, replicando la regla del backend).
 - **Fix de infraestructura crítico ✅ (bloqueaba S2-T04):** `MEDIA_ROOT` y `STATIC_ROOT` en `backend/config/settings/base.py` usaban `BASE_DIR.parent` (`Path.parent` mal calculado), lo que resolvía a `/media` y `/staticfiles` en la raíz del contenedor **en vez de** `/app/media` y `/app/staticfiles`. Como `docker-compose.yml` monta `media_volume` en `/app/media` (compartido con Nginx), los archivos subidos se guardaban fuera del volumen: existían en la base de datos pero eran inaccesibles y no persistían. Corregido a `BASE_DIR / "media"` / `BASE_DIR / "staticfiles"`.
@@ -138,4 +149,3 @@ Shirley pidió completar también las tareas de Oscar (S2-T02, S2-T04, S2-T06, S
 - **Gap de datos de seed encontrado y corregido ✅:** `tests/auth.spec.ts` (escenario E4) asume un usuario `cliente_test / TestPass123!` con rol Cliente Mayorista, pero `seed_dev_data` **nunca lo creaba** — solo crea `admin`. Al correr la suite real por primera vez, E4 falló por timeout (login nunca redirige porque el usuario no existe). Se agregó la creación de `cliente_test` + un registro `ClienteMayorista` vinculado en `backend/apps/usuarios/management/commands/seed_dev_data.py`.
 - **S2-T07 ✅:** `tests/importaciones.spec.ts` — flujo E2E completo: login → `/importaciones/nueva` → completar datos + 1 línea de detalle → verificar CIF previsualizado y CIF real coinciden → `/importaciones/:id` → 3 transiciones de estado (`REGISTRADA→EN_TRANSITO→EN_ADUANA→LIBERADA`) cada una con confirmación → verifica que `LIBERADA` es terminal (botón "Cambiar Estado" desaparece). Verificado también por fuera de Playwright que la liberación generó el `MovimientoInventario` de tipo `ENTRADA` (RF-09).
 - **Verificación final:** `tsc --noEmit` — 0 errores; `oxlint` — 0 errores propios; `python manage.py test apps` → 62/64 OK (los 2 fallos son `GAP-9`/`GAP-10`, preexistentes, confirmados con `git stash` que no los causó esta sesión); `npx playwright test` (desde la raíz) → **5/5 PASSED** (`auth.spec.ts` 4 + `importaciones.spec.ts` 1). Todos los datos de prueba creados durante la verificación fueron eliminados de la base de datos de desarrollo al finalizar.
-- **Pendiente real para una futura sesión:** revisar con Oscar si ya tenía trabajo en curso en `feature/s2-form-importacion`, `feature/s2-documentos`, `feature/s2-tipo-cambio` o `feature/s2-e2e-importacion` antes de mezclar a `dev`, ya que esas ramas nominalmente eran suyas.

@@ -13,7 +13,7 @@
 |--------|--------|-----------------|--------|
 | Sprint 1 | Autenticación, Layout y CRUDs Maestros | 2026-08-30 → 2026-09-20 | ✅ Cerrado |
 | Sprint 2 | Importaciones, Documentos y Costeo | 2026-09-21 → 2026-10-11 | ✅ Cerrado (adelantado, 2026-08-30) |
-| Sprint 3 | Catálogo Mayorista y Pedidos | 2026-10-12 → 2026-11-01 | ⏳ Pendiente |
+| Sprint 3 | Catálogo Mayorista y Pedidos | 2026-10-12 → 2026-11-01 | 🔄 En curso (adelantado, iniciado 2026-08-31) |
 | Sprint 4 | Reportes, Bitácora y Pruebas E2E | 2026-11-02 → 2026-11-22 | ⏳ Pendiente |
 
 ---
@@ -91,8 +91,8 @@
 
 ### Criterios de Aceptación del Sprint
 
-- [ ] El Cliente Mayorista ve solo variantes publicadas con stock > 0.
-- [ ] El catálogo filtra por talla, color y categoría dinámicamente desde la API.
+- [x] El Cliente Mayorista ve solo variantes publicadas con stock > 0.
+- [x] El catálogo filtra por talla, color y categoría dinámicamente desde la API.
 - [ ] El formulario de pedido agrupa variantes por modelo y muestra la cantidad mínima requerida.
 - [ ] Si la cantidad mínima no se cumple, se muestra un Toast de error claro antes de enviar la solicitud.
 - [ ] Si el stock es insuficiente, el backend rechaza el pedido y el frontend muestra el error.
@@ -104,7 +104,7 @@
 
 | ID | Tarea | Responsable | Rama | SP estimados |
 |----|-------|-------------|------|-------------|
-| S3-T01 | Vista `/catalogo` — grid de prendas con variantes (filtros talla/color/categoría) | Shirley | `feature/s3-catalogo-grid` | 8 |
+| S3-T01 | Vista `/catalogo` — grid de prendas con variantes (filtros talla/color/categoría) | Shirley | `feature/s3-catalogo-grid` | 8 ✅ |
 | S3-T02 | Componente `VarianteSelector` — tarjeta de variante con stock badge | Oscar | `feature/s3-variante-selector` | 5 |
 | S3-T03 | Vista `/pedidos/nuevo` — carrito de pedido con validación de mínimo en cliente | Oscar | `feature/s3-form-pedido` | 8 |
 | S3-T04 | Vista `/pedidos` — lista de pedidos con filtro de estado (diferenciada por rol) | Shirley | `feature/s3-lista-pedidos` | 5 |

@@ -16,6 +16,7 @@ import { Costeo } from '@/pages/costeo/Costeo'
 import { TipoCambio } from '@/pages/costeo/TipoCambio'
 import { Documentos } from '@/pages/documentos/Documentos'
 import { NuevaImportacion } from '@/pages/importaciones/NuevaImportacion'
+import { Catalogo } from '@/pages/catalogo/Catalogo'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import type { Role } from '@/types/auth'
@@ -169,7 +170,7 @@ function AppRoutes() {
           path="catalogo"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CLIENTE_MAYORISTA]}>
-              <ModulePlaceholder title="Catálogo" />
+              <Catalogo />
             </ProtectedRoute>
           }
         />

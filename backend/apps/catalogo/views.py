@@ -28,11 +28,34 @@ class PrendaViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if getattr(user, "rol_id", None) and user.rol.nombre == Roles.CLIENTE_MAYORISTA:
             # El catálogo mayorista solo muestra modelos activos con al
-            # menos una variante publicada (sección 12/14 del encargo).
+            # menos una variante publicada y con stock (sección 12/14 del
+            # encargo; Sprint 3 S3-T01).
             queryset = queryset.filter(
-                activo=True, variantes__estado=VarianteProducto.Estado.PUBLICADO
-            ).distinct()
-        return queryset
+                activo=True,
+                variantes__estado=VarianteProducto.Estado.PUBLICADO,
+                variantes__stock_disponible__gt=0,
+            )
+
+        # `talla`/`color` se manejan a mano (no vía `filterset_fields`)
+        # porque ambos viven en la relación inversa `variantes`: si se
+        # filtraran con dos `.filter()` encadenados (uno por campo), cada
+        # uno haría su propio JOIN independiente y matchearía prendas cuya
+        # talla X está en una variante y color Y en OTRA variante distinta.
+        # Un único `.filter(variantes__talla=..., variantes__color=...)`
+        # exige que ambos valores vivan en la MISMA fila de variante.
+        talla = self.request.query_params.get("talla")
+        color = self.request.query_params.get("color")
+        if talla and color:
+            queryset = queryset.filter(variantes__talla=talla, variantes__color=color)
+        elif talla:
+            queryset = queryset.filter(variantes__talla=talla)
+        elif color:
+            queryset = queryset.filter(variantes__color=color)
+
+        # `.distinct()` es obligatorio siempre: cualquier filtro contra
+        # `variantes` hace JOIN y puede repetir la misma Prenda una vez por
+        # variante coincidente.
+        return queryset.distinct()
 
     def get_permissions(self):
         if self.action in ("create", "update", "partial_update", "destroy"):

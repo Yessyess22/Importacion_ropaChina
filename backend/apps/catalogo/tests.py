@@ -106,6 +106,62 @@ class PrendaApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 0)
 
+    def test_cliente_no_ve_variante_borrador_anidada_en_prenda_visible(self):
+        # La prenda ya tiene una variante BORRADOR (creada en setUp); le
+        # agregamos una PUBLICADA con stock para que la prenda sí sea
+        # visible, y verificamos que la variante en borrador no se filtre
+        # dentro de `variantes` (Sprint 3 S3-T01).
+        VarianteProducto.objects.create(
+            prenda=self.prenda, talla="L", color="Azul",
+            precio_unitario=Decimal("100.00"),
+            estado=VarianteProducto.Estado.PUBLICADO, stock_disponible=5,
+        )
+        self.client.login(username="cliente_cat", password=self.password)
+        response = self.client.get("/api/v1/prendas/")
+        self.assertEqual(response.data["count"], 1)
+        variantes = response.data["results"][0]["variantes"]
+        self.assertEqual(len(variantes), 1)
+        self.assertEqual(variantes[0]["color"], "Azul")
+
+    def test_cliente_no_ve_prenda_con_variante_publicada_sin_stock(self):
+        prenda_sin_stock = Prenda.objects.create(codigo_modelo="VC-101", nombre="Sin stock")
+        VarianteProducto.objects.create(
+            prenda=prenda_sin_stock, talla="S", color="Negro",
+            precio_unitario=Decimal("50.00"),
+            estado=VarianteProducto.Estado.PUBLICADO, stock_disponible=0,
+        )
+        self.client.login(username="cliente_cat", password=self.password)
+        response = self.client.get("/api/v1/prendas/")
+        codigos = [p["codigo_modelo"] for p in response.data["results"]]
+        self.assertNotIn("VC-101", codigos)
+
+    def test_filtro_por_talla_y_color_de_variantes(self):
+        VarianteProducto.objects.create(
+            prenda=self.prenda, talla="L", color="Azul", precio_unitario=Decimal("100.00")
+        )
+        otra_prenda = Prenda.objects.create(codigo_modelo="VC-102", nombre="Otra")
+        VarianteProducto.objects.create(
+            prenda=otra_prenda, talla="S", color="Verde", precio_unitario=Decimal("60.00")
+        )
+
+        self.client.login(username="operador_cat", password=self.password)
+        response = self.client.get("/api/v1/prendas/?talla=L&color=Azul")
+        self.assertEqual(response.status_code, 200)
+        codigos = [p["codigo_modelo"] for p in response.data["results"]]
+        self.assertEqual(codigos, ["VC-100"])
+
+    def test_filtro_talla_y_color_exige_misma_variante(self):
+        # `self.prenda` (VC-100) ya tiene M/Rojo (setUp) y ahora L/Azul: la
+        # talla "M" y el color "Azul" existen en la prenda, pero en
+        # variantes DISTINTAS. El filtro combinado no debe matchearla.
+        VarianteProducto.objects.create(
+            prenda=self.prenda, talla="L", color="Azul", precio_unitario=Decimal("100.00")
+        )
+
+        self.client.login(username="operador_cat", password=self.password)
+        response = self.client.get("/api/v1/prendas/?talla=M&color=Azul")
+        self.assertEqual(response.data["count"], 0)
+
 
 class VarianteProductoApiTests(TestCase):
     def setUp(self):
