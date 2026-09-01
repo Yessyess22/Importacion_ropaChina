@@ -116,7 +116,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Stock',
     href: '/stock',
     icon: Layers,
-    allowedRoles: ALL_ROLES,
+    allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Agente Aduanal', 'Contabilidad'],
   },
   {
     label: 'Pedidos',

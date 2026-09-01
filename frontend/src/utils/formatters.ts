@@ -35,8 +35,17 @@ const ESTADO_MAP: Record<string, string> = {
   EN_PREPARACION: 'En Preparación',
   CONFIRMADO: 'Confirmado',
   DESPACHADO: 'Despachado',
+  ENVIADO: 'Enviado',
+  ENTREGADO: 'Entregado',
+  CANCELADO: 'Cancelado',
   ACTIVO: 'Activo',
   INACTIVO: 'Inactivo',
+  ENTRADA: 'Entrada',
+  SALIDA: 'Salida',
+  AJUSTE: 'Ajuste',
+  BORRADOR: 'Borrador',
+  PUBLICADO: 'Publicado',
+  DESCONTINUADO: 'Descontinuado',
 }
 
 export function formatEstado(estado: string): string {

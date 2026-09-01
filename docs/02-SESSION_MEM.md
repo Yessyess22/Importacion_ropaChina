@@ -9,11 +9,11 @@
 | Campo | Valor |
 |-------|-------|
 | **Fase** | Fase 5 — Frontend de Negocio y Pruebas E2E |
-| **Sprint activo** | **Sprint 3 de Fase 5: Catálogo Mayorista y Pedidos B2B — 🔄 En curso (S3-T01 completado)** |
-| **Fecha de inicio del sprint** | 2026-10-12 (planificada) — trabajo adelantado desde 2026-08-31 |
+| **Sprint activo** | **Sprint 3 de Fase 5: Catálogo Mayorista y Pedidos B2B — ✅ Cerrado (S3-T01 a S3-T07 completados)** |
+| **Fecha de inicio del sprint** | 2026-10-12 (planificada) — trabajo adelantado desde 2026-08-31, cerrado 2026-09-01 |
 | **Responsables** | Shirley Yessica Escobar Gutierrez · Oscar Alejandro Segovia Villarreal |
-| **Estado del backend** | ✅ Estable — API REST v1 completa; fixes de Sprint 3: `PrendaSerializer.variantes` filtrado por rol, filtro combinado talla+color, `seed_dev_data` con catálogo demo (ver notas) |
-| **Estado del frontend** | 🔄 Sprint 3 en curso — `/catalogo` implementada (S3-T01); pendientes: `VarianteSelector` (S3-T02), `/pedidos/nuevo` (S3-T03), `/pedidos` (S3-T04), `/pedidos/:id` (S3-T05), `/stock` (S3-T06) |
+| **Estado del backend** | ✅ Estable — API REST v1 completa; sin cambios de backend en todo Sprint 3 excepto los 3 fixes de S3-T01 |
+| **Estado del frontend** | ✅ Sprint 3 completo — `/catalogo`, `VarianteSelector`, `/pedidos/nuevo`, `/pedidos`, `/pedidos/:id`, `/stock` y su E2E (`tests/pedidos.spec.ts`) implementados |
 
 ---
 
@@ -47,14 +47,16 @@
 ## Objetivos del Sprint 3 (En curso desde 2026-08-31)
 
 - [x] **S3-T01** Vista `/catalogo` — grid de prendas con filtros de talla/color/categoría contra la API; imágenes de ropa juvenil por categoría (Unsplash, sin campo de imagen en el backend). *(2026-08-31 — Shirley/Agente)*
-- [ ] **S3-T02** Componente `VarianteSelector` — tarjeta de variante con stock badge.
-- [ ] **S3-T03** Vista `/pedidos/nuevo` — carrito de pedido con validación de mínimo en cliente.
-- [ ] **S3-T04** Vista `/pedidos` — lista de pedidos con filtro de estado (diferenciada por rol).
-- [ ] **S3-T05** Vista `/pedidos/:id` — detalle de pedido + cambio de estado para staff.
-- [ ] **S3-T06** Vista `/stock` — inventario con movimientos por variante.
-- [ ] **S3-T07** E2E Playwright: flujo de pedido.
+- [x] **S3-T02** Componente `VarianteSelector` — tarjeta de variante con stock badge (verde/ámbar/agotado), stepper de cantidad y botón "Agregar". *(2026-09-01 — Agente)*
+- [x] **S3-T03** Vista `/pedidos/nuevo` — carrito de pedido agrupado por modelo, validación de mínimo en cliente (propio para Cliente Mayorista, o del cliente seleccionado por Admin/Operador), envío a `POST /pedidos/`. *(2026-09-01 — Agente)*
+- [x] **S3-T04** Vista `/pedidos` — lista de pedidos con filtro de estado y cliente (Admin/Operador), sin columna/filtro de cliente para Cliente Mayorista (ya filtrado por el backend a su propio registro); ruta placeholder `/pedidos/:id` registrada para no romper el link "Ver detalle" hasta S3-T05. *(2026-09-01 — Agente)*
+- [x] **S3-T05** Vista `/pedidos/:id` — detalle de pedido (cliente, fecha, total, líneas) + modal de cambio de estado con stepper (Administrador/Operador), solo lectura para Cliente Mayorista/Contabilidad. *(2026-09-01 — Agente)*
+- [x] **S3-T06** Vista `/stock` — tabla de variantes (`GET /variantes/`) con estado/stock por umbral y modal de ledger de movimientos por variante (`GET /movimientos-inventario/`). Se corrigió `allowedRoles` de la ruta y del ítem de sidebar: el backend nunca permitió lectura de `movimientos-inventario` a Cliente Mayorista, pero el placeholder sí lo dejaba entrar — ahora coincide (Administrador/Operador/Contabilidad/Agente Aduanal). *(2026-09-01 — Agente)*
+- [x] **S3-T07** E2E Playwright: flujo de pedido (`tests/pedidos.spec.ts`) — selección de variante → bloqueo por mínimo incumplido → corrección de cantidad → confirmación → verificación en `/pedidos`. **Sprint 3 cerrado al 100%.** *(2026-09-01 — Agente)*
 
 > Nota: S3-T01 requirió 3 fixes de backend no previstos en la planificación original (ver `01-BITACORA_DESARROLLO.md`, entrada 2026-08-31): `PrendaSerializer.variantes` filtraba mal las variantes anidadas para el Cliente Mayorista, el queryset no exigía stock>0 a nivel de Prenda, y el filtro combinado talla+color tenía un bug de JOIN cruzado. Los tres eran necesarios para cumplir los criterios de aceptación del sprint, no alcance añadido.
+
+> Nota: S3-T02/S3-T03 no requirieron cambios de backend — `POST /pedidos/` y `GET /clientes-mayoristas/` ya soportaban todo lo necesario (filtrado por rol y `pedido_minimo_modelo`). Verificado end-to-end en navegador (Playwright ad-hoc, no committeado): Cliente Mayorista bloqueado por mínimo, luego pedido confirmado y stock descontado; Administrador con selector de cliente y su mínimo correspondiente. Datos de prueba (1 pedido) revertidos manualmente al finalizar (stock restaurado vía `inventario.services.registrar_entrada`, bitácora y pedido eliminados).
 
 ---
 
@@ -62,7 +64,6 @@
 
 | ID | Severidad | Descripción | Responsable |
 |----|-----------|-------------|-------------|
-| GAP-1 | 🔴 Crítico | Vistas de negocio pendientes (Sprint 3): Stock, Pedidos (Catálogo ya resuelto en S3-T01) | Shirley + Oscar |
 | GAP-5 | 🟢 Bajo | Tests de `reportes` son mínimos (25 líneas) | Shirley |
 | GAP-9 | 🟡 Medio | `pytest` no está instalado en el contenedor backend (falta en `requirements.txt`); `apps/auditoria/tests.py` no puede ejecutarse ni con `pytest` ni con `manage.py test` (usa fixtures de pytest) | Sin asignar |
 | GAP-10 | 🟢 Bajo | `apps.terceros.tests.ClienteMayoristaApiTests.test_cliente_consulta_su_propio_registro` falla con 404 en `main` (preexistente, no introducido en Sprint 2) | Sin asignar |

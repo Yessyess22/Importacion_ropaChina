@@ -17,6 +17,10 @@ import { TipoCambio } from '@/pages/costeo/TipoCambio'
 import { Documentos } from '@/pages/documentos/Documentos'
 import { NuevaImportacion } from '@/pages/importaciones/NuevaImportacion'
 import { Catalogo } from '@/pages/catalogo/Catalogo'
+import { NuevoPedido } from '@/pages/pedidos/NuevoPedido'
+import { Pedidos } from '@/pages/pedidos/Pedidos'
+import { PedidoDetalle } from '@/pages/pedidos/PedidoDetalle'
+import { Stock } from '@/pages/inventario/Stock'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import type { Role } from '@/types/auth'
@@ -232,10 +236,8 @@ function AppRoutes() {
         <Route
           path="stock"
           element={
-            <ProtectedRoute
-              allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD, CLIENTE_MAYORISTA]}
-            >
-              <ModulePlaceholder title="Stock" />
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
+              <Stock />
             </ProtectedRoute>
           }
         />
@@ -244,7 +246,25 @@ function AppRoutes() {
           path="pedidos"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD, CLIENTE_MAYORISTA]}>
-              <ModulePlaceholder title="Pedidos" />
+              <Pedidos />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="pedidos/nuevo"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CLIENTE_MAYORISTA]}>
+              <NuevoPedido />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="pedidos/:id"
+          element={
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD, CLIENTE_MAYORISTA]}>
+              <PedidoDetalle />
             </ProtectedRoute>
           }
         />

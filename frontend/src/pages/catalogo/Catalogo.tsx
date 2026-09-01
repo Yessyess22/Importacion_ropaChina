@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ImageOff, Shirt, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, ImageOff, Plus, Shirt, X } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { Prenda } from '@/types/catalogo'
+import { useAuth } from '@/hooks/useAuth'
 import { formatCurrency, formatEstado } from '@/utils/formatters'
 import { ESTADO_VARIANTE_COLOR } from '@/utils/catalogoUi'
 import { getImagenPrenda } from '@/utils/catalogoImagenes'
@@ -22,6 +24,7 @@ import {
 
 const PAGE_SIZE = 20
 const TODOS = 'TODOS'
+const PEDIDO_ROLES = ['Administrador', 'Operador de Comercio Exterior', 'Cliente Mayorista']
 
 function ImagenPrendaCard({ prenda }: { prenda: Prenda }) {
   const [fallo, setFallo] = useState(false)
@@ -54,6 +57,9 @@ function rangoPrecio(prenda: Prenda): string {
 }
 
 export function Catalogo() {
+  const { role } = useAuth()
+  const canPedir = role != null && PEDIDO_ROLES.includes(role)
+
   const [items, setItems] = useState<Prenda[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -123,11 +129,20 @@ export function Catalogo() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Catálogo</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {totalCount} {totalCount === 1 ? 'modelo disponible' : 'modelos disponibles'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Catálogo</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {totalCount} {totalCount === 1 ? 'modelo disponible' : 'modelos disponibles'}
+          </p>
+        </div>
+
+        {canPedir && (
+          <Button nativeButton={false} render={<Link to="/pedidos/nuevo" />}>
+            <Plus className="size-4" />
+            Nuevo Pedido
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
