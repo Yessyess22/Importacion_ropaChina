@@ -5,16 +5,14 @@ Integra el flujo de **importación → gestión aduanera → costeo → inventar
 catálogo mayorista → pedidos B2B**, gestionando variantes de producto por
 talla y color, y la regla de cantidad mínima de compra por modelo.
 
-> **Estado actual: Fase 5 — Sprint 1 completado al 100%.**
-> El backend REST (`/api/v1/`) está estable y documentado desde la Fase 4
-> (ver [docs/api.md](docs/api.md)). En la Fase 5 Sprint 1 se construyó el
-> frontend de negocio: Layout Shell con sidebar por rol, login con Sonner,
-> y los CRUDs premium de datos maestros — **Usuarios, Proveedores, Clientes
-> Mayoristas y Agentes Aduanales** — con Action Bar Card, Interactive Table
-> con hover, Dialog Shell `sm:max-w-150` en grid de 2 columnas, control de
-> permisos por rol, AlertDialog de confirmación y toasts Sonner para errores
-> DRF. Tests Pytest (7/7) y E2E Playwright (4 escenarios de auth) en verde.
-> **Sprint 2 activo:** Importaciones, Documentos y Costeo.
+> **Estado actual: Fase 5 completada (Sprints 1–4 cerrados).**
+> El sistema ya incluye frontend de negocio completo: layout por rol, CRUDs
+> maestros, flujos transaccionales (Importaciones, Documentos, Costeo),
+> Catálogo/Pedidos/Inventario y módulos de Reportes + Bitácora.
+> Validación técnica al cierre de Fase 5: **Pytest 85/85 en verde** y
+> **Playwright 12/12 en verde**.  
+> Detalle de cierre por sprint: [docs/04-SPRINTS.md](docs/04-SPRINTS.md) y
+> [docs/05-FINDINGS_DEUDA.md](docs/05-FINDINGS_DEUDA.md).
 
 ## Stack tecnológico
 
@@ -64,13 +62,11 @@ trendy-import/
 │       ├── hooks/           # useAuth
 │       ├── services/        # authService (login/logout/me), api.ts (cliente HTTP /api/v1/)
 │       ├── components/      # ProtectedRoute, ui/ (shadcn)
-│       ├── pages/
-│       │   ├── Login.tsx
-│       │   ├── admin/          # Usuarios (CRUD premium)
-│       │   └── terceros/       # Proveedores, ClientesMayoristas, AgentesAduanales (CRUDs premium)
+│       ├── pages/          # Login + módulos completos: admin, terceros, importaciones,
+│       │                   # documentos, costeo, catálogo, pedidos, inventario, reportes, auditoría
 │       ├── types/            # auth.ts, api.ts, catalogo.ts, terceros.ts, importaciones.ts, costeo.ts, pedidos.ts
 │       └── layouts/ utils/ lib/
-├── tests/              # Pruebas E2E — auth.spec.ts (Playwright, 4 escenarios)
+├── tests/              # Pruebas E2E Playwright (auth, importaciones, pedidos, reportes)
 ├── nginx/              # nginx.conf (reverse proxy)
 ├── docker/             # Dockerfiles de backend y frontend
 ├── docs/               # database.md, authentication.md, api.md, postman/
@@ -132,8 +128,8 @@ docker compose exec backend python manage.py test apps
 # Tests unitarios con pytest (auditoria, etc.)
 docker compose exec backend pytest apps/auditoria/ -v
 
-# Tests E2E con Playwright (requiere stack Docker activo en http://localhost)
-npx playwright test tests/auth.spec.ts
+# Tests E2E con Playwright (suite completa, requiere stack Docker activo)
+npm run test:e2e
 
 # Cargar datos mínimos de desarrollo (roles, admin de prueba, ejemplo de catálogo)
 # Solo funciona con DJANGO_DEBUG=True; nunca usar en producción.
@@ -174,6 +170,11 @@ debería quedar expuesto.
 - `http://localhost/proveedores` → CRUD premium de Proveedores (Admin + Operador).
 - `http://localhost/clientes-mayoristas` → CRUD premium de Clientes Mayoristas (solo Admin).
 - `http://localhost/agentes-aduanales` → CRUD premium de Agentes Aduanales (Admin + Operador).
+- `http://localhost/importaciones` → flujo transaccional de importaciones (lista, alta, detalle, estados).
+- `http://localhost/documentos` → carga y gestión de documentos aduaneros (multipart).
+- `http://localhost/costeo` y `http://localhost/tipo-cambio` → cálculo de costeo y administración de tipo de cambio.
+- `http://localhost/catalogo` / `http://localhost/pedidos` / `http://localhost/stock` → portal mayorista y control de inventario.
+- `http://localhost/reportes` y `http://localhost/auditoria` → inteligencia de negocio y trazabilidad.
 - `http://localhost/api/health/` → `{"status": "ok", "service": "trendy-import-backend"}`.
 - `http://localhost/api/docs/` → documentación interactiva Swagger UI de la API v1 completa.
 - `http://localhost/admin/` → panel de administración Django (usuarios, roles, permisos).
@@ -190,18 +191,20 @@ debería quedar expuesto.
 - [x] Modelos de dominio, migraciones, Django Admin y pruebas básicas (Fase 2 — ver [docs/database.md](docs/database.md))
 - [x] Autenticación por sesión, roles y permisos por rol en el backend, rutas protegidas en el frontend (Fase 3 — ver [docs/authentication.md](docs/authentication.md))
 - [x] API REST `/api/v1/` para catálogo, terceros, importaciones (con CIF calculado en backend), documentos, costeo/tributos/tipo de cambio, inventario, pedidos (mínimo por modelo + reserva de stock) y reportes; paginación, filtros, permisos por rol y documentación OpenAPI (Fase 4 — ver [docs/api.md](docs/api.md))
-- [x] **Fase 5 — Sprint 1 completado:** Layout Shell con sidebar filtrado por rol y login con Sonner; CRUDs premium de datos maestros (`/usuarios`, `/proveedores`, `/clientes-mayoristas`, `/agentes-aduanales`) con Action Bar Card, Interactive Table, Dialog Shell grid 2 col, AlertDialog de confirmación y toasts Sonner; tests Pytest 7/7 y 4 escenarios E2E Playwright en verde
-- [ ] **Fase 5 — Sprint 2 (activo):** Vistas transaccionales — Importaciones, Documentos y Costeo
-- [ ] **Fase 5 — Sprint 3:** Catálogo de prendas, Pedidos mayoristas e Inventario
-- [ ] Throttling / rate limiting para producción, notificaciones de estado de pedido
+- [x] **Fase 5 — Sprint 1:** Layout Shell, login y CRUDs maestros (`/usuarios`, `/proveedores`, `/clientes-mayoristas`, `/agentes-aduanales`)
+- [x] **Fase 5 — Sprint 2:** Vistas transaccionales (`/importaciones`, `/documentos`, `/costeo`, `/tipo-cambio`)
+- [x] **Fase 5 — Sprint 3:** Catálogo, Pedidos e Inventario (`/catalogo`, `/pedidos`, `/stock`)
+- [x] **Fase 5 — Sprint 4:** Reportes + Bitácora (`/reportes`, `/auditoria`) + cierre de QA integral
+- [ ] Post-Fase 5: throttling/rate limiting para producción, notificaciones de estado de pedido
 
 ## Progreso por sprint (Fase 5)
 
 | Sprint | Foco | Estado |
 |--------|------|--------|
 | Sprint 1 | Layout Shell + CRUDs maestros (Usuarios, Proveedores, Clientes, Agentes) | ✅ Completado 2026-08-30 |
-| Sprint 2 | Importaciones, Documentos, Costeo | 🚧 Activo |
-| Sprint 3 | Catálogo, Pedidos, Inventario | 🔜 Pendiente |
+| Sprint 2 | Importaciones, Documentos, Costeo | ✅ Completado 2026-08-30 (adelantado) |
+| Sprint 3 | Catálogo, Pedidos, Inventario | ✅ Completado 2026-09-01 (adelantado) |
+| Sprint 4 | Reportes, Bitácora, QA y E2E integral | ✅ Completado 2026-09-02 (adelantado) |
 
 ---
 

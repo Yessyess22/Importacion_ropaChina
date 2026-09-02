@@ -65,6 +65,72 @@ class LoginEndpointTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class UsuarioApiValidacionTests(TestCase):
+    """Checklist #5 (docs/10-PLAN_VALIDACIONES.md, Sprint 6): contraseña
+    fuerte y username mínimo en `UsuarioWriteSerializer`, ejercitados vía
+    el endpoint real `/api/v1/usuarios/` (Solo Administrador)."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.password = "Clave-Segura123"
+        self.administrador = _crear_usuario("admin_val", Roles.ADMINISTRADOR, self.password)
+        self.client.login(username="admin_val", password=self.password)
+
+    def _payload(self, **overrides):
+        payload = {"username": "nuevo_usuario", "email": "nuevo@trendy.test", "password": "Abcdef1!"}
+        payload.update(overrides)
+        return payload
+
+    def test_crea_usuario_con_password_fuerte(self):
+        response = self.client.post("/api/v1/usuarios/", self._payload())
+        self.assertEqual(response.status_code, 201)
+
+    def test_rechaza_password_sin_mayuscula(self):
+        response = self.client.post("/api/v1/usuarios/", self._payload(password="abcdef1!"))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.data)
+
+    def test_rechaza_password_sin_simbolo(self):
+        response = self.client.post("/api/v1/usuarios/", self._payload(password="Abcdefg1"))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.data)
+
+    def test_rechaza_password_muy_corta(self):
+        response = self.client.post("/api/v1/usuarios/", self._payload(password="Ab1!"))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.data)
+
+    def test_permite_password_en_blanco_al_crear(self):
+        # Comportamiento intencional preexistente: sin password = cuenta con
+        # password inutilizable hasta que se le asigne una.
+        response = self.client.post("/api/v1/usuarios/", self._payload(password=""))
+        self.assertEqual(response.status_code, 201)
+
+    def test_rechaza_username_muy_corto(self):
+        response = self.client.post("/api/v1/usuarios/", self._payload(username="ab"))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("username", response.data)
+
+    def test_editar_sin_enviar_password_conserva_la_actual(self):
+        creado = self.client.post("/api/v1/usuarios/", self._payload(username="editable"))
+        self.assertEqual(creado.status_code, 201)
+        usuario = Usuario.objects.get(username="editable")
+
+        response = self.client.patch(f"/api/v1/usuarios/{usuario.id}/", {"first_name": "Ana"})
+        self.assertEqual(response.status_code, 200)
+        usuario.refresh_from_db()
+        self.assertTrue(usuario.check_password("Abcdef1!"))
+
+    def test_guarda_email_en_minusculas(self):
+        response = self.client.post(
+            "/api/v1/usuarios/",
+            self._payload(username="conemailmayus", email="Nuevo.Usuario@Trendy.TEST"),
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        usuario = Usuario.objects.get(username="conemailmayus")
+        self.assertEqual(usuario.email, "nuevo.usuario@trendy.test")
+
+
 class MeEndpointTests(TestCase):
     def setUp(self):
         self.client = APIClient()

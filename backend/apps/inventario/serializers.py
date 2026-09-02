@@ -30,3 +30,8 @@ class AjustarStockSerializer(serializers.Serializer):
     variante = serializers.PrimaryKeyRelatedField(queryset=VarianteProducto.objects.all())
     delta = serializers.IntegerField()
     observacion = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_delta(self, value):
+        if value == 0:
+            raise serializers.ValidationError("El ajuste no puede ser 0: no representaría ningún cambio.")
+        return value

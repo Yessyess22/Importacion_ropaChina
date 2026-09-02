@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.catalogo.serializers import VarianteProductoNestedSerializer
+from apps.core.validators import validar_fecha_no_futura
 
 from .models import DetalleImportacion, OperacionImportacion
 
@@ -61,6 +62,10 @@ class OperacionImportacionSerializer(serializers.ModelSerializer):
         # `valor_cif` SIEMPRE lo calcula `services.calcular_cif` (RF-04):
         # nunca se acepta el valor que envíe el cliente HTTP.
         read_only_fields = ["estado", "valor_cif", "created_at", "updated_at"]
+
+    def validate_fecha_registro(self, value):
+        validar_fecha_no_futura(value)
+        return value
 
 
 class CambiarEstadoOperacionSerializer(serializers.Serializer):

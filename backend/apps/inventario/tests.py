@@ -34,6 +34,14 @@ class InventarioServiceTests(TestCase):
         self.variante.refresh_from_db()
         self.assertEqual(self.variante.stock_disponible, 5)
 
+    def test_mensaje_de_stock_insuficiente_indica_variante_y_disponible(self):
+        with self.assertRaises(ConflictError) as ctx:
+            services.registrar_salida(self.variante, 10)
+        mensaje = str(ctx.exception.detail)
+        self.assertIn(str(self.variante), mensaje)
+        self.assertIn("disponible 5", mensaje)
+        self.assertIn("solicitado 10", mensaje)
+
 
 class MovimientoInventarioApiTests(TestCase):
     def setUp(self):
@@ -65,3 +73,24 @@ class MovimientoInventarioApiTests(TestCase):
         self.assertEqual(response.status_code, 201, response.data)
         self.variante.refresh_from_db()
         self.assertEqual(self.variante.stock_disponible, 3)
+
+    def test_rechaza_ajuste_delta_cero(self):
+        self.client.login(username="admin_inv", password=self.password)
+        response = self.client.post(
+            "/api/v1/movimientos-inventario/ajuste/",
+            {"variante": self.variante.id, "delta": 0},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("delta", response.data)
+
+    def test_salida_con_stock_insuficiente_devuelve_409_con_detalle(self):
+        self.client.login(username="admin_inv", password=self.password)
+        response = self.client.post(
+            "/api/v1/movimientos-inventario/salida/",
+            {"variante": self.variante.id, "cantidad": 100},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("disponible 5", response.data["detail"])
+        self.assertIn("solicitado 100", response.data["detail"])

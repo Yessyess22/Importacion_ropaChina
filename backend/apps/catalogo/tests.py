@@ -185,6 +185,16 @@ class VarianteProductoApiTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
 
+    def test_rechaza_precio_unitario_cero(self):
+        self.client.login(username="operador_var", password=self.password)
+        response = self.client.post(
+            "/api/v1/variantes/",
+            {"prenda": self.prenda.id, "talla": "XL", "color": "Blanco", "precio_unitario": "0.00"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("precio_unitario", response.data)
+
     def test_variante_duplicada_via_api_devuelve_400(self):
         VarianteProducto.objects.create(
             prenda=self.prenda, talla="S", color="Azul", precio_unitario=Decimal("80.00")

@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.importaciones.models import OperacionImportacion
@@ -36,8 +39,14 @@ class Tributo(models.Model):
     costeo = models.ForeignKey(Costeo, on_delete=models.CASCADE, related_name="tributos")
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     partida_arancelaria = models.CharField(max_length=20, blank=True)
-    base_imponible = models.DecimalField(max_digits=12, decimal_places=2)
-    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    base_imponible = models.DecimalField(
+        max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
+    )
+    porcentaje = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0")), MaxValueValidator(Decimal("100"))],
+    )
     monto = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
@@ -58,7 +67,9 @@ class TipoCambio(models.Model):
     """
 
     fecha = models.DateField(unique=True)
-    valor = models.DecimalField(max_digits=6, decimal_places=4)
+    valor = models.DecimalField(
+        max_digits=6, decimal_places=4, validators=[MinValueValidator(Decimal("0.0001"))]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

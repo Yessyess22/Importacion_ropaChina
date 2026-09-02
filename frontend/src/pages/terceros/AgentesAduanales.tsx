@@ -6,6 +6,13 @@ import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { AgenteAduanal } from '@/types/terceros'
 import { useAuth } from '@/hooks/useAuth'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
+import {
+  validarEmailCampo,
+  validarNitCampo,
+  validarRazonSocial,
+  validarTelefonoCampo,
+} from '@/utils/terceroValidation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -67,6 +74,8 @@ export function AgentesAduanales() {
 
   const [toggleTarget, setToggleTarget] = useState<AgenteAduanal | null>(null)
 
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   async function fetchItems() {
@@ -102,6 +111,7 @@ export function AgentesAduanales() {
   function openCreate() {
     setEditItem(null)
     setForm(EMPTY_FORM)
+    clearErrors()
     setDialogOpen(true)
   }
 
@@ -109,6 +119,7 @@ export function AgentesAduanales() {
     setEditItem(item)
     const { id: _, ...rest } = item
     setForm(rest)
+    clearErrors()
     setDialogOpen(true)
   }
 
@@ -118,18 +129,42 @@ export function AgentesAduanales() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
+
+    const razonSocial = validarRazonSocial(form.razon_social)
+    const nit = validarNitCampo(form.nit)
+    const telefono = validarTelefonoCampo(form.telefono)
+    const email = validarEmailCampo(form.email)
+    if (razonSocial.error || nit.error || telefono.error || email.error) {
+      setFieldError('razon_social', razonSocial.error)
+      setFieldError('nit', nit.error)
+      setFieldError('telefono', telefono.error)
+      setFieldError('email', email.error)
+      focusField(razonSocial.error ? 'razon_social' : nit.error ? 'nit' : telefono.error ? 'telefono' : 'email')
+      return
+    }
+
+    const payload = {
+      ...form,
+      razon_social: razonSocial.valor,
+      nit: nit.valor,
+      telefono: telefono.valor,
+      email: email.valor,
+    }
+
     setSubmitting(true)
     try {
       if (editItem) {
-        await api.patch(`/agentes-aduanales/${editItem.id}/`, form)
+        await api.patch(`/agentes-aduanales/${editItem.id}/`, payload)
         toast.success('Agente aduanal actualizado correctamente.')
       } else {
-        await api.post('/agentes-aduanales/', form)
+        await api.post('/agentes-aduanales/', payload)
         toast.success('Agente aduanal creado correctamente.')
       }
       setDialogOpen(false)
       await fetchItems()
     } catch (err) {
+      applyApiError(err)
       toast.error('Error al guardar', {
         description: err instanceof Error ? err.message : undefined,
       })
@@ -313,11 +348,21 @@ export function AgentesAduanales() {
                 </Label>
                 <Input
                   id="ag_razon_social"
+                  name="razon_social"
                   value={form.razon_social}
                   onChange={(e) => setField('razon_social', e.target.value)}
+                  onBlur={(e) => {
+                    const { valor, error } = validarRazonSocial(e.target.value)
+                    setField('razon_social', valor)
+                    setFieldError('razon_social', error)
+                  }}
                   required
+                  aria-invalid={Boolean(errors.razon_social)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
+                {errors.razon_social && (
+                  <p className="text-xs text-destructive">{errors.razon_social}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ag_nit">
@@ -325,11 +370,19 @@ export function AgentesAduanales() {
                 </Label>
                 <Input
                   id="ag_nit"
+                  name="nit"
                   value={form.nit}
                   onChange={(e) => setField('nit', e.target.value)}
+                  onBlur={(e) => {
+                    const { valor, error } = validarNitCampo(e.target.value)
+                    setField('nit', valor)
+                    setFieldError('nit', error)
+                  }}
                   required
+                  aria-invalid={Boolean(errors.nit)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
+                {errors.nit && <p className="text-xs text-destructive">{errors.nit}</p>}
               </div>
 
               {/* Fila 2: Registro Aduanero | Teléfono */}
@@ -349,10 +402,18 @@ export function AgentesAduanales() {
                 <Label htmlFor="ag_telefono">Teléfono</Label>
                 <Input
                   id="ag_telefono"
+                  name="telefono"
                   value={form.telefono}
                   onChange={(e) => setField('telefono', e.target.value)}
+                  onBlur={(e) => {
+                    const { valor, error } = validarTelefonoCampo(e.target.value)
+                    setField('telefono', valor)
+                    setFieldError('telefono', error)
+                  }}
+                  aria-invalid={Boolean(errors.telefono)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
+                {errors.telefono && <p className="text-xs text-destructive">{errors.telefono}</p>}
               </div>
 
               {/* Fila 3: Email (ancho completo) */}
@@ -362,12 +423,20 @@ export function AgentesAduanales() {
                 </Label>
                 <Input
                   id="ag_email"
+                  name="email"
                   type="email"
                   value={form.email}
                   onChange={(e) => setField('email', e.target.value)}
+                  onBlur={(e) => {
+                    const { valor, error } = validarEmailCampo(e.target.value)
+                    setField('email', valor)
+                    setFieldError('email', error)
+                  }}
                   required
+                  aria-invalid={Boolean(errors.email)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
 
               {/* Fila 4: Dirección (ancho completo) */}

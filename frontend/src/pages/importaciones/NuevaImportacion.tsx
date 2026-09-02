@@ -9,6 +9,8 @@ import type { OperacionImportacion } from '@/types/importaciones'
 import type { AgenteAduanal, Proveedor, Transportista } from '@/types/terceros'
 import type { Prenda } from '@/types/catalogo'
 import { formatCurrency } from '@/utils/formatters'
+import { fechaNoFutura, montoNoNegativo } from '@/utils/validators'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -64,6 +66,8 @@ export function NuevaImportacion() {
   const [lineas, setLineas] = useState<LineaForm[]>([])
   const [submitting, setSubmitting] = useState(false)
 
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
+
   useEffect(() => {
     Promise.all([
       api.get<PaginatedResponse<Proveedor>>('/proveedores/?page_size=100'),
@@ -117,6 +121,7 @@ export function NuevaImportacion() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
 
     if (!form.proveedor) {
       toast.error('Selecciona un proveedor.')
@@ -130,6 +135,26 @@ export function NuevaImportacion() {
     if (new Set(variantesUsadas).size !== variantesUsadas.length) {
       toast.error('No puedes repetir la misma variante en dos líneas.')
       return
+    }
+
+    // Validación en tiempo real (checklist #6/#7/#13): evita el round-trip
+    // al backend para el error más común, sin reemplazarlo.
+    if (!fechaNoFutura(form.fecha_registro)) {
+      setFieldError('fecha_registro', 'La fecha de registro no puede ser futura.')
+      focusField('fecha_registro')
+      return
+    }
+    const camposMonto: Array<['valor_fob' | 'valor_flete' | 'valor_seguro', string]> = [
+      ['valor_fob', 'El valor FOB no puede ser negativo.'],
+      ['valor_flete', 'El flete no puede ser negativo.'],
+      ['valor_seguro', 'El seguro no puede ser negativo.'],
+    ]
+    for (const [campo, mensaje] of camposMonto) {
+      if (!montoNoNegativo(form[campo])) {
+        setFieldError(campo, mensaje)
+        focusField(campo)
+        return
+      }
     }
 
     setSubmitting(true)
@@ -167,6 +192,7 @@ export function NuevaImportacion() {
       }
       navigate(`/importaciones/${operacion.id}`)
     } catch (err) {
+      applyApiError(err)
       toast.error('No se pudo registrar la importación', {
         description: err instanceof Error ? err.message : undefined,
       })
@@ -258,11 +284,22 @@ export function NuevaImportacion() {
               <Label htmlFor="fecha_registro">Fecha de Registro <span className="text-destructive">*</span></Label>
               <Input
                 id="fecha_registro"
+                name="fecha_registro"
                 type="date"
                 value={form.fecha_registro}
                 onChange={(e) => setField('fecha_registro', e.target.value)}
+                onBlur={(e) => {
+                  setFieldError(
+                    'fecha_registro',
+                    fechaNoFutura(e.target.value) ? null : 'La fecha de registro no puede ser futura.'
+                  )
+                }}
                 required
+                aria-invalid={Boolean(errors.fecha_registro)}
               />
+              {errors.fecha_registro && (
+                <p className="text-xs text-destructive">{errors.fecha_registro}</p>
+              )}
             </div>
 
             <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-2">
@@ -286,37 +323,64 @@ export function NuevaImportacion() {
               <Label htmlFor="valor_fob">Valor FOB <span className="text-destructive">*</span></Label>
               <Input
                 id="valor_fob"
+                name="valor_fob"
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.valor_fob}
                 onChange={(e) => setField('valor_fob', e.target.value)}
+                onBlur={(e) =>
+                  setFieldError(
+                    'valor_fob',
+                    montoNoNegativo(e.target.value) ? null : 'El valor FOB no puede ser negativo.'
+                  )
+                }
                 required
+                aria-invalid={Boolean(errors.valor_fob)}
               />
+              {errors.valor_fob && <p className="text-xs text-destructive">{errors.valor_fob}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="valor_flete">Flete <span className="text-destructive">*</span></Label>
               <Input
                 id="valor_flete"
+                name="valor_flete"
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.valor_flete}
                 onChange={(e) => setField('valor_flete', e.target.value)}
+                onBlur={(e) =>
+                  setFieldError(
+                    'valor_flete',
+                    montoNoNegativo(e.target.value) ? null : 'El flete no puede ser negativo.'
+                  )
+                }
                 required
+                aria-invalid={Boolean(errors.valor_flete)}
               />
+              {errors.valor_flete && <p className="text-xs text-destructive">{errors.valor_flete}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="valor_seguro">Seguro <span className="text-destructive">*</span></Label>
               <Input
                 id="valor_seguro"
+                name="valor_seguro"
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.valor_seguro}
                 onChange={(e) => setField('valor_seguro', e.target.value)}
+                onBlur={(e) =>
+                  setFieldError(
+                    'valor_seguro',
+                    montoNoNegativo(e.target.value) ? null : 'El seguro no puede ser negativo.'
+                  )
+                }
                 required
+                aria-invalid={Boolean(errors.valor_seguro)}
               />
+              {errors.valor_seguro && <p className="text-xs text-destructive">{errors.valor_seguro}</p>}
             </div>
             <div className="flex flex-col gap-1.5 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
               <span className="text-xs font-semibold uppercase tracking-wide text-primary">CIF (previsualización)</span>
@@ -383,7 +447,7 @@ export function NuevaImportacion() {
                     <TableCell>
                       <Input
                         type="number"
-                        min="0"
+                        min="0.01"
                         step="0.01"
                         value={linea.costo_unitario_fob}
                         onChange={(e) => updateLinea(linea.key, 'costo_unitario_fob', e.target.value)}

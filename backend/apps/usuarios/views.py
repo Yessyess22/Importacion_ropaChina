@@ -6,6 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .models import Usuario
@@ -19,9 +20,15 @@ class LoginView(APIView):
     en este punto todavía no existe una sesión autenticada, así que
     SessionAuthentication no la exige (ver docs/authentication.md). Nunca
     devuelve la contraseña ni su hash.
+
+    `throttle_scope = "login"` (checklist #12): limita intentos de fuerza
+    bruta con la tasa `DEFAULT_THROTTLE_RATES["login"]` de `settings/base.py`,
+    independiente del límite general de `AnonRateThrottle`.
     """
 
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)

@@ -6,8 +6,10 @@ import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { OperacionImportacion } from '@/types/importaciones'
 import type { Costeo as CosteoType, TipoTributo, Tributo } from '@/types/costeo'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
 import { formatCurrency, formatDate, formatEstado } from '@/utils/formatters'
 import { ESTADO_IMPORTACION_COLOR } from '@/utils/importacionesUi'
+import { montoNoNegativo, porcentajeValido } from '@/utils/validators'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -62,6 +64,8 @@ export function Costeo() {
   const [deleteTarget, setDeleteTarget] = useState<Tributo | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
+
   const operacionSeleccionada = operaciones.find((o) => String(o.id) === selectedId) ?? null
 
   useEffect(() => {
@@ -111,7 +115,20 @@ export function Costeo() {
 
   async function handleAgregarTributo(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
     if (!selectedId || !form.tipo) return
+
+    if (!montoNoNegativo(form.base_imponible)) {
+      setFieldError('base_imponible', 'La base imponible no puede ser negativa.')
+      focusField('base_imponible')
+      return
+    }
+    if (!porcentajeValido(form.porcentaje)) {
+      setFieldError('porcentaje', 'El porcentaje debe estar entre 0 y 100.')
+      focusField('porcentaje')
+      return
+    }
+
     setSubmitting(true)
     try {
       const costeoActual = costeo ?? (await handleCalcularCosteo())
@@ -130,6 +147,7 @@ export function Costeo() {
       setForm(EMPTY_TRIBUTO_FORM)
       toast.success('Tributo registrado correctamente.')
     } catch (err) {
+      applyApiError(err)
       toast.error('No se pudo registrar el tributo', {
         description: err instanceof Error ? err.message : undefined,
       })
@@ -289,25 +307,46 @@ export function Costeo() {
                 <Label htmlFor="base">Base Imponible <span className="text-destructive">*</span></Label>
                 <Input
                   id="base"
+                  name="base_imponible"
                   type="number"
                   step="0.01"
                   min="0"
                   value={form.base_imponible}
                   onChange={(e) => setField('base_imponible', e.target.value)}
+                  onBlur={(e) =>
+                    setFieldError(
+                      'base_imponible',
+                      montoNoNegativo(e.target.value) ? null : 'La base imponible no puede ser negativa.'
+                    )
+                  }
                   required
+                  aria-invalid={Boolean(errors.base_imponible)}
                 />
+                {errors.base_imponible && (
+                  <p className="text-xs text-destructive">{errors.base_imponible}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="porcentaje">Porcentaje (%) <span className="text-destructive">*</span></Label>
                 <Input
                   id="porcentaje"
+                  name="porcentaje"
                   type="number"
                   step="0.01"
                   min="0"
+                  max="100"
                   value={form.porcentaje}
                   onChange={(e) => setField('porcentaje', e.target.value)}
+                  onBlur={(e) =>
+                    setFieldError(
+                      'porcentaje',
+                      porcentajeValido(e.target.value) ? null : 'El porcentaje debe estar entre 0 y 100.'
+                    )
+                  }
                   required
+                  aria-invalid={Boolean(errors.porcentaje)}
                 />
+                {errors.porcentaje && <p className="text-xs text-destructive">{errors.porcentaje}</p>}
               </div>
               <Button type="submit" disabled={submitting || !form.tipo} className="w-full sm:w-auto">
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}

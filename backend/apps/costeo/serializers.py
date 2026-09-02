@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from apps.core.validators import validar_fecha_no_futura
+
 from .models import Costeo, TipoCambio, Tributo
 
 
@@ -31,3 +33,7 @@ class TipoCambioSerializer(serializers.ModelSerializer):
     class Meta:
         model = TipoCambio
         fields = ["id", "fecha", "valor", "created_at"]
+
+    def validate_fecha(self, value):
+        validar_fecha_no_futura(value)
+        return value

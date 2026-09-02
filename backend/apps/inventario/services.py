@@ -22,7 +22,14 @@ def _aplicar_movimiento(variante, tipo, cantidad_delta, observacion="", origen=N
         variante_bloqueada = VarianteProducto.objects.select_for_update().get(pk=variante.pk)
         nuevo_stock = variante_bloqueada.stock_disponible + cantidad_delta
         if nuevo_stock < 0:
-            raise ConflictError("Stock insuficiente para esta operación.")
+            # Checklist #13 (docs/10-PLAN_VALIDACIONES.md, Sprint 8): el
+            # mensaje identifica la variante y la cantidad disponible para
+            # que el frontend no tenga que adivinarlo ni repetir la
+            # consulta de stock por su cuenta.
+            raise ConflictError(
+                f"Stock insuficiente para {variante_bloqueada}: disponible "
+                f"{variante_bloqueada.stock_disponible}, solicitado {abs(cantidad_delta)}."
+            )
 
         variante_bloqueada.stock_disponible = nuevo_stock
         variante_bloqueada.save(update_fields=["stock_disponible", "updated_at"])

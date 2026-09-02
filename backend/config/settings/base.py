@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     # Apps propias del dominio
+    "apps.core",
     "apps.usuarios",
     "apps.terceros",
     "apps.catalogo",
@@ -89,9 +90,10 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "apps.core.validators.PasswordFuerteValidator"},
 ]
 
 LANGUAGE_CODE = "es"
@@ -123,6 +125,24 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+    # Checklist #12 (auditoría y seguridad): límite general por IP/usuario +
+    # un scope dedicado y más estricto para `LoginView` (fuerza bruta de
+    # credenciales), aplicado con `ScopedRateThrottle` en esa vista.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/min",
+        "user": "120/min",
+        # `ScopedRateThrottle` es por IP (no por cuenta): un valor bajo
+        # bloquearía a varios empleados legítimos entrando casi a la vez
+        # desde la misma IP de oficina (NAT). 20/min sigue frenando un
+        # ataque de fuerza bruta en varios órdenes de magnitud, sin
+        # penalizar el uso concurrente normal (verificado con la suite E2E
+        # completa corriendo en paralelo, sección 12 del checklist).
+        "login": "20/min",
+    },
 }
 
 SPECTACULAR_SETTINGS = {

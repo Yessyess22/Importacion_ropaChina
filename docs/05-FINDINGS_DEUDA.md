@@ -2,8 +2,8 @@
 
 > Registro vivo de brechas de implementación, bugs conocidos y mejoras pendientes detectadas durante la revisión de código o el trabajo de sprint. Cada ítem tiene un propietario y un sprint objetivo de resolución.
 
-**Última actualización:** 2026-09-02 (cierre de Sprint 4 — Fase 5 completa)
-**Fuente de la auditoría:** [`docs/09-AUDITORIA_CODIGO.md`](09-AUDITORIA_CODIGO.md)
+**Última actualización:** 2026-09-02 (cierre de Fase 6 — checklist de validación profesional, Sprints 5–9)
+**Fuente de la auditoría:** [`docs/09-AUDITORIA_CODIGO.md`](09-AUDITORIA_CODIGO.md) · [`docs/10-PLAN_VALIDACIONES.md`](10-PLAN_VALIDACIONES.md)
 
 ---
 
@@ -272,6 +272,31 @@ Verificado end-to-end: `curl -I http://localhost/media/.../archivo.pdf` → `200
 
 ---
 
+### GAP-16 — Sin validación profesional de datos ni rate limiting (checklist de 13 puntos)
+
+| Campo | Valor |
+|-------|-------|
+| **Severidad** | 🟡 Medio |
+| **Detectado** | 2026-09-02 (Fase 6, checklist de validación profesional solicitado explícitamente) |
+| **Sprint objetivo** | Sprints 5, 6, 7, 8 y 9 |
+| **Propietario** | Oscar + Shirley |
+| **Estado** | ✅ Resuelto (2026-09-02) |
+
+**Descripción:** hasta el cierre de Sprint 4, la validación de datos era casi enteramente la que Django/DRF infieren de los tipos de campo (`max_length`, `unique`, `choices`) más `required`/`type="email"` de HTML5 en el frontend. Sin regex de formato (NIT, teléfono, texto), sin normalización (trim, minúsculas), sin contraseña fuerte aplicada realmente al crear/editar `Usuario` (los `AUTH_PASSWORD_VALIDATORS` nunca se invocaban desde `UsuarioWriteSerializer`), sin `MinValueValidator` en montos de importaciones/costeo, sin validación de fecha futura, sin restricción de tipo/tamaño de archivo en `Documento`, y sin `DEFAULT_THROTTLE_CLASSES` en `REST_FRAMEWORK` (ningún límite de intentos de login). Detalle completo del diagnóstico y del trabajo por sprint en `docs/10-PLAN_VALIDACIONES.md`.
+
+**Resolución aplicada (resumen; ver `docs/10-PLAN_VALIDACIONES.md` para el detalle por sprint):**
+- **Sprint 5** — `backend/apps/core/validators.py` (nuevo, sin modelos): validadores/normalizadores reutilizables de texto, NIT, teléfono, contraseña fuerte y fecha no futura. `PasswordFuerteValidator` añadido a `AUTH_PASSWORD_VALIDATORS`. Rate limiting (`DEFAULT_THROTTLE_CLASSES`/`RATES`) + `ScopedRateThrottle` en `LoginView`. Frontend: `utils/validators.ts` + `hooks/useFormErrors.ts` + `ApiError` en `services/api.ts` (conserva los errores por campo de DRF sin romper el `err.message` que ya usaban todas las páginas).
+- **Sprint 6** — `TerceroValidationMixin` en los 4 subtipos de `Tercero`; `UsuarioWriteSerializer.validate_password`/`validate_username`. Confirmación de contraseña en `Usuarios.tsx`. Aplicado en `Proveedores.tsx`, `ClientesMayoristas.tsx`, `AgentesAduanales.tsx`.
+- **Sprint 7** — `MinValueValidator`/`MaxValueValidator` en `catalogo`, `importaciones`, `costeo`; `validate_fecha_registro`/`validate_fecha` (no futura). Aplicado en `NuevaImportacion.tsx`, `TipoCambio.tsx`, `Costeo.tsx`.
+- **Sprint 8** — mensaje de `ConflictError` de stock insuficiente enriquecido con variante y cantidades (`inventario/services.py`); `AjustarStockSerializer.validate_delta` (≠ 0). Banner persistente + indicador "faltan N" por línea en `NuevoPedido.tsx` (manteniendo el toast ya cubierto por `tests/pedidos.spec.ts`).
+- **Sprint 9** — `validate_archivo` (extensión/tamaño/nombre saneado) en `documentos/serializers.py`. Corrección de `THROTTLE_RATES["login"]` de `10/min` a `20/min` tras detectar que el valor inicial producía falsos `429` con tráfico legítimo concurrente (la suite E2E completa en paralelo, y potencialmente varios empleados de oficina tras la misma IP). QA final encontró y corrigió 2 gaps residuales: `UsuarioWriteSerializer` no bajaba el email a minúsculas, y `Documento.fecha_emision` no rechazaba fechas futuras.
+
+**Fuera de alcance, con justificación (no son deuda pendiente):** `Prenda.nombre/categoria/temporada/coleccion` no reciben la regla "solo texto" (un nombre de modelo de ropa admite números: "Vestido Casual 2026"). No se agregó registro en `Bitacora` para intentos de login fallidos (el alcance de auditoría actual son operaciones de negocio, no eventos de autenticación — sumarlo sería una función nueva, no un endurecimiento).
+
+**Verificación:** 142 tests de backend en verde (`pytest apps/`, +33 desde el cierre de Sprint 4), `ruff check`/`ruff format --check` limpios, sin migraciones pendientes. Frontend: `tsc -b`, `oxlint`, `npm run build` sin errores. Probado en Chromium real vía Playwright en cada sprint, más la suite E2E completa (`auth`, `importaciones`, `pedidos`, `reportes`) corriendo en paralelo sin regresiones.
+
+---
+
 ## Historial de Deuda Resuelta
 
 | Fecha resolución | ID | Descripción | Resuelto por |
@@ -298,3 +323,4 @@ Verificado end-to-end: `curl -I http://localhost/media/.../archivo.pdf` → `200
 | 2026-09-02 | GAP-10 | Corregida la URL del test (`/clientes/` → `/clientes-mayoristas/`) — no era un bug de la API | Oscar |
 | 2026-09-02 | GAP-14 | `ruff` agregado a `requirements.txt` + `backend/pyproject.toml` con ruleset explícito; 170 errores → 0, 48 archivos reformateados | Oscar |
 | 2026-09-02 | GAP-15 | `/reportes` alineado entre frontend y backend — se quitó `Agente Aduanal` de `allowedRoles` (el backend nunca lo permitió) | Oscar |
+| 2026-09-02 | GAP-16 | Checklist de validación profesional de 13 puntos completado en Sprints 5–9 (`docs/10-PLAN_VALIDACIONES.md`): texto/NIT/teléfono/email/contraseña/montos/fechas/archivos con validación backend+frontend, rate limiting de login, UX de error por campo | Oscar + Shirley |

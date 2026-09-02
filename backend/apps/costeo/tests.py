@@ -31,6 +31,30 @@ class TipoCambioTests(TestCase):
                 TipoCambio.objects.create(fecha="2026-08-28", valor=Decimal("7.0000"))
 
 
+class TipoCambioApiValidacionTests(TestCase):
+    """Checklist #6/#7 (docs/10-PLAN_VALIDACIONES.md, Sprint 7)."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.password = "Clave-Segura123"
+        self.administrador = _crear_usuario("admin_tc", Roles.ADMINISTRADOR, self.password)
+        self.client.login(username="admin_tc", password=self.password)
+
+    def test_rechaza_valor_cero(self):
+        response = self.client.post(
+            "/api/v1/tipo-cambio/", {"fecha": "2026-08-28", "valor": "0"}, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("valor", response.data)
+
+    def test_rechaza_fecha_futura(self):
+        response = self.client.post(
+            "/api/v1/tipo-cambio/", {"fecha": "2099-01-01", "valor": "6.96"}, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("fecha", response.data)
+
+
 class CosteoApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -52,6 +76,22 @@ class CosteoApiTests(TestCase):
         self.client.login(username="cliente_costeo", password=self.password)
         response = self.client.get("/api/v1/costeos/")
         self.assertEqual(response.status_code, 403)
+
+    def test_rechaza_porcentaje_mayor_a_cien(self):
+        costeo = Costeo.objects.create(operacion=self.operacion)
+        self.client.login(username="admin_costeo", password=self.password)
+        response = self.client.post(
+            "/api/v1/tributos/",
+            {
+                "costeo": costeo.id,
+                "tipo": Tributo.Tipo.ARANCEL,
+                "base_imponible": "1120.00",
+                "porcentaje": "150.00",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("porcentaje", response.data)
 
     def test_calcular_costeo_suma_cif_y_tributos(self):
         costeo = Costeo.objects.create(operacion=self.operacion)

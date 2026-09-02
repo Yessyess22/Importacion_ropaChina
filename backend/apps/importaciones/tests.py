@@ -89,6 +89,40 @@ class OperacionImportacionApiTests(TestCase):
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(Decimal(response.data["valor_cif"]), Decimal("1300.00"))
 
+    def test_rechaza_valor_fob_negativo(self):
+        self.client.login(username="operador_imp", password=self.password)
+        response = self.client.post(
+            "/api/v1/importaciones/",
+            {
+                "codigo_unico": "OP-API-NEG",
+                "proveedor": self.proveedor.id,
+                "fecha_registro": "2026-08-01",
+                "valor_fob": "-100.00",
+                "valor_flete": "100.00",
+                "valor_seguro": "20.00",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("valor_fob", response.data)
+
+    def test_rechaza_fecha_registro_futura(self):
+        self.client.login(username="operador_imp", password=self.password)
+        response = self.client.post(
+            "/api/v1/importaciones/",
+            {
+                "codigo_unico": "OP-API-FUTURA",
+                "proveedor": self.proveedor.id,
+                "fecha_registro": "2099-01-01",
+                "valor_fob": "1000.00",
+                "valor_flete": "100.00",
+                "valor_seguro": "20.00",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("fecha_registro", response.data)
+
     def test_cliente_no_puede_crear_importacion(self):
         self.client.login(username="cliente_imp", password=self.password)
         response = self.client.post(
@@ -141,3 +175,24 @@ class OperacionImportacionApiTests(TestCase):
 
         variante.refresh_from_db()
         self.assertEqual(variante.stock_disponible, 10)
+
+    def test_rechaza_costo_unitario_fob_cero(self):
+        prenda = Prenda.objects.create(codigo_modelo="VC-IMP-2", nombre="Prenda Importada 2")
+        variante = VarianteProducto.objects.create(
+            prenda=prenda, talla="S", color="Negro", precio_unitario=Decimal("50.00")
+        )
+        operacion = self._crear_operacion("OP-API-0005")
+
+        self.client.login(username="operador_imp", password=self.password)
+        response = self.client.post(
+            "/api/v1/detalles-importacion/",
+            {
+                "operacion": operacion.id,
+                "variante": variante.id,
+                "cantidad": 5,
+                "costo_unitario_fob": "0.00",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("costo_unitario_fob", response.data)

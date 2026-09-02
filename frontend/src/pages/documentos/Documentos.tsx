@@ -6,7 +6,9 @@ import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { OperacionImportacion } from '@/types/importaciones'
 import type { Documento, TipoDocumento } from '@/types/documentos'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
 import { formatDate } from '@/utils/formatters'
+import { validarArchivoDocumento } from '@/utils/validators'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,6 +67,8 @@ export function Documentos() {
   const [deleteTarget, setDeleteTarget] = useState<Documento | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
+
   const operacionSeleccionada = operaciones.find((o) => String(o.id) === selectedId) ?? null
   const puedeEliminar = operacionSeleccionada?.estado !== 'LIBERADA'
 
@@ -93,9 +97,30 @@ export function Documentos() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
+  function handleArchivoChange(file: File | null) {
+    setArchivo(file)
+    if (!file) {
+      setFieldError('archivo', null)
+      return
+    }
+    // Validación en tiempo real (checklist #9/#13): mismo criterio que
+    // `documentos/serializers.DocumentoSerializer.validate_archivo`.
+    setFieldError('archivo', validarArchivoDocumento(file))
+  }
+
   async function handleUpload(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
     if (!selectedId || !form.tipo) return
+    if (archivo) {
+      const error = validarArchivoDocumento(archivo)
+      if (error) {
+        setFieldError('archivo', error)
+        focusField('archivo')
+        return
+      }
+    }
+
     setSubmitting(true)
     try {
       const payload = new FormData()
@@ -113,6 +138,7 @@ export function Documentos() {
       if (fileInput) fileInput.value = ''
       toast.success('Documento adjuntado correctamente.')
     } catch (err) {
+      applyApiError(err)
       toast.error('No se pudo adjuntar el documento', {
         description: err instanceof Error ? err.message : undefined,
       })
@@ -151,7 +177,7 @@ export function Documentos() {
         <Label htmlFor="operacion-select" className="mb-1.5 block">Operación de Importación</Label>
         <Select
           value={selectedId}
-          onValueChange={(v) => setSelectedId(v ?? '')}
+          onValueChange={(v) => { setSelectedId(v ?? ''); clearErrors() }}
           disabled={loadingOperaciones}
         >
           <SelectTrigger id="operacion-select" className="w-full sm:w-80">
@@ -214,10 +240,13 @@ export function Documentos() {
                 <Label htmlFor="archivo">Archivo</Label>
                 <Input
                   id="archivo"
+                  name="archivo"
                   type="file"
                   accept="application/pdf,image/*"
-                  onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                  onChange={(e) => handleArchivoChange(e.target.files?.[0] ?? null)}
+                  aria-invalid={Boolean(errors.archivo)}
                 />
+                {errors.archivo && <p className="text-xs text-destructive">{errors.archivo}</p>}
               </div>
               <Button type="submit" disabled={submitting || !form.tipo} className="w-full sm:w-auto">
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}

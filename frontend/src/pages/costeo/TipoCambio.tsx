@@ -6,7 +6,9 @@ import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
 import type { TipoCambio as TipoCambioType } from '@/types/costeo'
 import { useAuth } from '@/hooks/useAuth'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
 import { formatDate } from '@/utils/formatters'
+import { fechaNoFutura, montoPositivo } from '@/utils/validators'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -59,6 +61,8 @@ export function TipoCambio() {
   const [deleteTarget, setDeleteTarget] = useState<TipoCambioType | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   async function fetchItems() {
@@ -90,12 +94,14 @@ export function TipoCambio() {
   function openCreate() {
     setEditItem(null)
     setForm(EMPTY_FORM)
+    clearErrors()
     setDialogOpen(true)
   }
 
   function openEdit(item: TipoCambioType) {
     setEditItem(item)
     setForm({ fecha: item.fecha, valor: item.valor })
+    clearErrors()
     setDialogOpen(true)
   }
 
@@ -105,6 +111,19 @@ export function TipoCambio() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
+
+    if (!fechaNoFutura(form.fecha)) {
+      setFieldError('fecha', 'La fecha no puede ser futura.')
+      focusField('fecha')
+      return
+    }
+    if (!montoPositivo(form.valor)) {
+      setFieldError('valor', 'El valor debe ser mayor a 0.')
+      focusField('valor')
+      return
+    }
+
     setSubmitting(true)
     try {
       if (editItem) {
@@ -117,6 +136,7 @@ export function TipoCambio() {
       setDialogOpen(false)
       await fetchItems()
     } catch (err) {
+      applyApiError(err)
       toast.error('Error al guardar', { description: err instanceof Error ? err.message : undefined })
     } finally {
       setSubmitting(false)
@@ -230,23 +250,35 @@ export function TipoCambio() {
                 <Label htmlFor="fecha">Fecha <span className="text-destructive">*</span></Label>
                 <Input
                   id="fecha"
+                  name="fecha"
                   type="date"
                   value={form.fecha}
                   onChange={(e) => setField('fecha', e.target.value)}
+                  onBlur={(e) =>
+                    setFieldError('fecha', fechaNoFutura(e.target.value) ? null : 'La fecha no puede ser futura.')
+                  }
                   required
+                  aria-invalid={Boolean(errors.fecha)}
                 />
+                {errors.fecha && <p className="text-xs text-destructive">{errors.fecha}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="valor">Valor (BOB) <span className="text-destructive">*</span></Label>
                 <Input
                   id="valor"
+                  name="valor"
                   type="number"
                   step="0.0001"
-                  min="0"
+                  min="0.0001"
                   value={form.valor}
                   onChange={(e) => setField('valor', e.target.value)}
+                  onBlur={(e) =>
+                    setFieldError('valor', montoPositivo(e.target.value) ? null : 'El valor debe ser mayor a 0.')
+                  }
                   required
+                  aria-invalid={Boolean(errors.valor)}
                 />
+                {errors.valor && <p className="text-xs text-destructive">{errors.valor}</p>}
               </div>
             </div>
             <DialogFooter>

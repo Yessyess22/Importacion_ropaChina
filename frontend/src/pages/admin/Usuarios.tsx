@@ -4,6 +4,8 @@ import { Plus, Pencil, Power, ChevronLeft, ChevronRight, Loader2 } from 'lucide-
 
 import { api } from '@/services/api'
 import type { PaginatedResponse, UsuarioAdmin } from '@/types/api'
+import { focusField, useFormErrors } from '@/hooks/useFormErrors'
+import { passwordFuerte } from '@/utils/validators'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -70,6 +72,7 @@ interface UsuarioForm {
   last_name: string
   email: string
   password: string
+  password2: string
   rol: string
   is_active: boolean
 }
@@ -80,6 +83,7 @@ const EMPTY_FORM: UsuarioForm = {
   last_name: '',
   email: '',
   password: '',
+  password2: '',
   rol: '',
   is_active: true,
 }
@@ -97,6 +101,8 @@ export function Usuarios() {
   const [submitting, setSubmitting] = useState(false)
 
   const [toggleTarget, setToggleTarget] = useState<UsuarioAdmin | null>(null)
+
+  const { errors, applyApiError, clearErrors, setFieldError } = useFormErrors()
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
@@ -133,6 +139,7 @@ export function Usuarios() {
   function openCreate() {
     setEditItem(null)
     setForm(EMPTY_FORM)
+    clearErrors()
     setDialogOpen(true)
   }
 
@@ -144,9 +151,11 @@ export function Usuarios() {
       last_name: item.last_name,
       email: item.email,
       password: '',
+      password2: '',
       rol: item.rol_nombre ?? '',
       is_active: item.is_active,
     })
+    clearErrors()
     setDialogOpen(true)
   }
 
@@ -156,6 +165,31 @@ export function Usuarios() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
+    clearErrors()
+
+    // Validación en tiempo real (checklist #5/#13): contraseña fuerte y
+    // confirmación coincidente antes de llamar a la API. El backend
+    // (`UsuarioWriteSerializer.validate_password`) vuelve a exigir la
+    // fuerza igual si este chequeo se saltara por cualquier motivo.
+    if (form.password) {
+      const { valido, errores } = passwordFuerte(form.password)
+      if (!valido) {
+        setFieldError('password', errores[0])
+        focusField('password')
+        return
+      }
+      if (form.password !== form.password2) {
+        setFieldError('password2', 'Las contraseñas no coinciden.')
+        focusField('password2')
+        return
+      }
+    }
+    if (form.username.length < 4) {
+      setFieldError('username', 'El usuario debe tener al menos 4 caracteres.')
+      focusField('username')
+      return
+    }
+
     setSubmitting(true)
     const payload: Record<string, unknown> = {
       username: form.username,
@@ -177,6 +211,7 @@ export function Usuarios() {
       setDialogOpen(false)
       await fetchItems()
     } catch (err) {
+      applyApiError(err)
       toast.error('Error al guardar', {
         description: err instanceof Error ? err.message : undefined,
       })
@@ -347,12 +382,15 @@ export function Usuarios() {
                 </Label>
                 <Input
                   id="username"
+                  name="username"
                   value={form.username}
                   onChange={(e) => setField('username', e.target.value)}
                   required
                   autoComplete="off"
+                  aria-invalid={Boolean(errors.username)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
+                {errors.username && <p className="text-xs text-destructive">{errors.username}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="rol">
@@ -405,25 +443,50 @@ export function Usuarios() {
                 />
               </div>
 
-              {/* Fila 4: password (ancho completo) */}
-              <div className="col-span-2 flex flex-col gap-1.5">
+              {/* Fila 4: password | confirmar password */}
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">
                   Contraseña{!editItem && <span className="ml-0.5 text-destructive">*</span>}
                 </Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   value={form.password}
                   onChange={(e) => setField('password', e.target.value)}
                   required={!editItem}
                   autoComplete="new-password"
+                  aria-invalid={Boolean(errors.password)}
                   className="focus-visible:ring-primary focus-visible:border-primary"
                 />
-                {editItem && (
+                {errors.password ? (
+                  <p className="text-xs text-destructive">{errors.password}</p>
+                ) : editItem ? (
                   <p className="text-xs text-muted-foreground">
-                    Al editar, deje este campo en blanco para conservar la contraseña actual.
+                    Deje en blanco para conservar la contraseña actual.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Mínimo 8 caracteres, con mayúscula, minúscula, número y símbolo.
                   </p>
                 )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password2">
+                  Confirmar Contraseña{!editItem && <span className="ml-0.5 text-destructive">*</span>}
+                </Label>
+                <Input
+                  id="password2"
+                  name="password2"
+                  type="password"
+                  value={form.password2}
+                  onChange={(e) => setField('password2', e.target.value)}
+                  required={!editItem && Boolean(form.password)}
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.password2)}
+                  className="focus-visible:ring-primary focus-visible:border-primary"
+                />
+                {errors.password2 && <p className="text-xs text-destructive">{errors.password2}</p>}
               </div>
             </div>
 

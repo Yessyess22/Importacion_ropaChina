@@ -53,6 +53,7 @@ export function NuevoPedido() {
   const [clienteId, setClienteId] = useState('')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     const peticiones: [Promise<PaginatedResponse<Prenda>>, Promise<PaginatedResponse<ClienteMayorista>>] = [
@@ -102,6 +103,11 @@ export function NuevoPedido() {
     0,
   )
 
+  const modelosInsuficientes = useMemo(() => {
+    if (minimoRequerido == null) return []
+    return Array.from(totalesPorModelo.values()).filter((m) => m.cantidad < minimoRequerido)
+  }, [totalesPorModelo, minimoRequerido])
+
   function agregarAlCarrito(prenda: Prenda, variante: VarianteProductoResumen, cantidad: number) {
     setCarrito((prev) => {
       const idx = prev.findIndex((i) => i.variante.id === variante.id)
@@ -126,6 +132,8 @@ export function NuevoPedido() {
   }
 
   async function handleConfirmar() {
+    setSubmitError(null)
+
     if (carrito.length === 0) {
       toast.error('Agrega al menos una variante al pedido.')
       return
@@ -138,16 +146,16 @@ export function NuevoPedido() {
       toast.error('No se pudo determinar la cantidad mínima del cliente.')
       return
     }
-
-    const modelosInsuficientes = Array.from(totalesPorModelo.values()).filter(
-      (m) => m.cantidad < minimoRequerido,
-    )
+    // Validación en tiempo real (checklist #13): el resumen por modelo ya
+    // marca en rojo "faltan N" en cada línea insuficiente (ver abajo);
+    // este mensaje se muestra además como toast y como banner persistente,
+    // nunca solo como uno de los dos.
     if (modelosInsuficientes.length > 0) {
-      toast.error(
-        `La cantidad mínima por modelo es ${minimoRequerido} unidades. Falta completar: ${modelosInsuficientes
-          .map((m) => `${m.label} (${m.cantidad}/${minimoRequerido})`)
-          .join(', ')}.`,
-      )
+      const mensaje = `La cantidad mínima por modelo es ${minimoRequerido} unidades. Falta completar: ${modelosInsuficientes
+        .map((m) => `${m.label} (${m.cantidad}/${minimoRequerido})`)
+        .join(', ')}.`
+      setSubmitError(mensaje)
+      toast.error(mensaje)
       return
     }
 
@@ -163,9 +171,15 @@ export function NuevoPedido() {
       setCarrito([])
       navigate('/catalogo')
     } catch (err) {
-      toast.error('No se pudo registrar el pedido', {
-        description: err instanceof Error ? err.message : undefined,
-      })
+      // El backend responde 409 con un `detail` de negocio (mínimo por
+      // modelo desactualizado, o stock insuficiente en una condición de
+      // carrera — el mensaje ya identifica la variante y la cantidad
+      // disponible, ver `inventario/services._aplicar_movimiento`). Se
+      // muestra como banner persistente junto al carrito, no solo en un
+      // toast que desaparece.
+      const mensaje = err instanceof Error ? err.message : 'No se pudo registrar el pedido.'
+      setSubmitError(mensaje)
+      toast.error('No se pudo registrar el pedido', { description: mensaje })
     } finally {
       setSubmitting(false)
     }
@@ -299,11 +313,13 @@ export function NuevoPedido() {
               <div className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3 text-sm">
                 {Array.from(totalesPorModelo.entries()).map(([prendaId, info]) => {
                   const cumple = minimoRequerido == null || info.cantidad >= minimoRequerido
+                  const faltan = minimoRequerido != null ? minimoRequerido - info.cantidad : 0
                   return (
                     <div key={prendaId} className="flex items-center justify-between">
                       <span className="text-muted-foreground">{info.label}</span>
                       <span className={cumple ? 'text-emerald-600' : 'font-medium text-destructive'}>
                         {info.cantidad}{minimoRequerido != null ? ` / ${minimoRequerido} mín.` : ''}
+                        {!cumple && ` — faltan ${faltan}`}
                       </span>
                     </div>
                   )
@@ -314,6 +330,12 @@ export function NuevoPedido() {
                 <span className="text-sm font-semibold text-foreground">Total del Pedido</span>
                 <span className="text-lg font-bold text-primary">{formatCurrency(totalPedido)}</span>
               </div>
+
+              {submitError && (
+                <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                  {submitError}
+                </p>
+              )}
 
               <Button onClick={handleConfirmar} disabled={submitting} className="self-end">
                 {submitting && <Loader2 className="size-4 animate-spin" />}

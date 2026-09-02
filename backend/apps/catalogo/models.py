@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -37,7 +40,9 @@ class VarianteProducto(models.Model):
     prenda = models.ForeignKey(Prenda, on_delete=models.PROTECT, related_name="variantes")
     talla = models.CharField(max_length=20)
     color = models.CharField(max_length=50)
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_unitario = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
+    )
     stock_disponible = models.PositiveIntegerField(
         default=0,
         help_text=(
