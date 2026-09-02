@@ -8,9 +8,9 @@
  * Ejecución:
  *   npx playwright test tests/reportes.spec.ts
  *
- * Cubre RF-11 (reportes de importaciones/pedidos agrupados por estado,
- * con gráfico + tabla + exportación CSV) y S4-T03 (bitácora paginada con
- * filtro por acción y usuario).
+ * Cubre RF-11 (reportes de importaciones/pedidos con gráfico + tabla de
+ * detalle por registro + exportación a PDF) y S4-T03 (bitácora paginada
+ * con filtro por acción y usuario).
  */
 
 import { expect, test } from '@playwright/test'
@@ -21,7 +21,7 @@ const ADMIN_PASSWORD = 'AdminDesarrolloUPDS2026!'
 const CLIENTE_USERNAME = 'cliente_test'
 const CLIENTE_PASSWORD = 'TestPass123!'
 
-test('E1: reporte de importaciones muestra gráfico, tabla y permite exportar CSV', async ({ page }) => {
+test('E1: reporte de importaciones muestra gráfico, detalle y permite exportar PDF', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Usuario').fill(ADMIN_USERNAME)
   await page.getByLabel('Contraseña').fill(ADMIN_PASSWORD)
@@ -31,24 +31,28 @@ test('E1: reporte de importaciones muestra gráfico, tabla y permite exportar CS
   await page.getByRole('link', { name: 'Reportes' }).click()
   await page.waitForURL('/reportes')
 
-  await expect(page.getByRole('heading', { name: 'Importaciones por Estado' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Importaciones', exact: true })).toBeVisible()
   await expect(page.getByRole('img', { name: 'Cantidad de importaciones por estado' })).toBeVisible()
+  await expect(page.getByText(/Detalle de operaciones/)).toBeVisible()
 
   const downloadPromise = page.waitForEvent('download')
   await page
-    .locator('section', { has: page.getByRole('heading', { name: 'Importaciones por Estado' }) })
-    .getByRole('button', { name: /exportar csv/i })
+    .locator('section', { has: page.getByRole('heading', { name: 'Importaciones', exact: true }) })
+    .getByRole('button', { name: /exportar pdf/i })
     .click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toBe('reporte-importaciones.csv')
+  expect(download.suggestedFilename()).toBe('reporte-importaciones-detallado.pdf')
 
-  // Filtro de fechas: un rango sin operaciones muestra la tabla vacía.
-  await page.getByLabel('Desde').fill('2099-01-01')
+  // Filtro de fechas: un rango sin operaciones muestra la tabla de detalle vacía.
+  const seccionImportaciones = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Importaciones', exact: true }),
+  })
+  await seccionImportaciones.getByLabel('Desde').fill('2099-01-01')
   await expect(page.getByText('No hay operaciones registradas en el rango seleccionado.')).toBeVisible()
-  await page.getByRole('button', { name: 'Limpiar filtro' }).click()
+  await seccionImportaciones.getByRole('button', { name: 'Limpiar filtro' }).click()
 })
 
-test('E2: reporte de pedidos filtra por cliente y permite exportar CSV', async ({ page }) => {
+test('E2: reporte de pedidos filtra por cliente y permite exportar PDF', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Usuario').fill(ADMIN_USERNAME)
   await page.getByLabel('Contraseña').fill(ADMIN_PASSWORD)
@@ -56,15 +60,16 @@ test('E2: reporte de pedidos filtra por cliente y permite exportar CSV', async (
   await page.waitForURL('/')
 
   await page.goto('/reportes')
-  await expect(page.getByRole('heading', { name: 'Pedidos por Estado' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Pedidos', exact: true })).toBeVisible()
+  await expect(page.getByText(/Detalle de pedidos/)).toBeVisible()
 
   const downloadPromise = page.waitForEvent('download')
   await page
-    .locator('section', { has: page.getByRole('heading', { name: 'Pedidos por Estado' }) })
-    .getByRole('button', { name: /exportar csv/i })
+    .locator('section', { has: page.getByRole('heading', { name: 'Pedidos', exact: true }) })
+    .getByRole('button', { name: /exportar pdf/i })
     .click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toBe('reporte-pedidos.csv')
+  expect(download.suggestedFilename()).toBe('reporte-pedidos-detallado.pdf')
 })
 
 test('E3: Cliente Mayorista no puede acceder a /reportes', async ({ page }) => {
@@ -93,12 +98,13 @@ test('E4: bitácora lista registros y filtra por acción', async ({ page }) => {
   const filas = page.locator('tbody tr')
   await expect(filas.first()).toBeVisible()
 
+  // Se usan aserciones con auto-retry de Playwright (en vez de un
+  // `waitForTimeout` fijo) para no depender de cuánto tarde el fetch —
+  // un timeout fijo es una fuente de flakiness bajo carga variable.
   await page.getByPlaceholder('Buscar por acción…').fill('crear_pedido')
-  await page.waitForTimeout(400)
   await expect(filas.first()).toContainText('Crear Pedido')
 
   await page.getByPlaceholder('Buscar por acción…').fill('accion_inexistente_zzz')
-  await page.waitForTimeout(400)
   await expect(page.getByText('Sin resultados para los filtros aplicados.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Limpiar filtros' }).click()

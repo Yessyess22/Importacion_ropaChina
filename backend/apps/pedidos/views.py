@@ -9,6 +9,7 @@ from . import services
 from .models import DetallePedido, PedidoMayorista
 from .permissions import IsOwnerPedidoOrStaff
 from .serializers import (
+    ActualizarDetallesPedidoSerializer,
     CambiarEstadoPedidoSerializer,
     DetallePedidoSerializer,
     PedidoMayoristaCreateSerializer,
@@ -49,7 +50,7 @@ class PedidoMayoristaViewSet(viewsets.ModelViewSet):
         return PedidoMayoristaSerializer
 
     def get_permissions(self):
-        if self.action == "actualizar_estado":
+        if self.action in ("actualizar_estado", "actualizar_detalles"):
             return [IsAuthenticated(), HasRole(*GESTION_ROLES)()]
         return super().get_permissions()
 
@@ -83,6 +84,16 @@ class PedidoMayoristaViewSet(viewsets.ModelViewSet):
         serializer = CambiarEstadoPedidoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         pedido = services.cambiar_estado_pedido(pedido, serializer.validated_data["estado"], request.user)
+        return Response(PedidoMayoristaSerializer(pedido).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="actualizar-detalles")
+    def actualizar_detalles(self, request, pk=None):
+        pedido = self.get_object()
+        serializer = ActualizarDetallesPedidoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        pedido = services.actualizar_detalles_pedido(
+            pedido, serializer.validated_data["detalles"], request.user
+        )
         return Response(PedidoMayoristaSerializer(pedido).data, status=status.HTTP_200_OK)
 
 

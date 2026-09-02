@@ -81,7 +81,6 @@
 
 **Total SP Sprint 2:** 39
 
-> **Nota de ejecución (2026-08-30):** Sprint 2 se cerró completo en una sola sesión. La columna "Responsable" refleja la planificación original; en la práctica Shirley implementó las 7 tareas (incluidas S2-T02, S2-T04, S2-T06 y S2-T07, planificadas para Oscar) a pedido explícito, para adelantar el sprint. Antes de integrar a `dev`, verificar con Oscar si ya había avance propio en `feature/s2-form-importacion`, `feature/s2-documentos`, `feature/s2-tipo-cambio` o `feature/s2-e2e-importacion` para evitar conflictos.
 
 ---
 
@@ -144,8 +143,6 @@
 | S4-T07 | Revisión final de tipos TypeScript (`tsc --noEmit`), linting y accesibilidad | Ambos | `feature/s4-qa-final` | 3 ✅ |
 
 **Total SP Sprint 4:** 32
-
-> **Nota de ejecución (2026-09-02):** Sprint 4 se cerró completo en una sola sesión (mismo patrón de adelanto que Sprints 2 y 3). Además del alcance planificado, S4-T03 requirió construir desde cero el endpoint `GET /api/v1/bitacora/` (serializer + viewset + urls) — no existía ningún backend para la bitácora antes de esta tarea, solo el modelo y el servicio `registrar()`. S4-T06/S4-T07 también resolvieron tres brechas de infraestructura de QA que llevaban abiertas desde Sprint 2 (ver `05-FINDINGS_DEUDA.md`: GAP-9, GAP-10, y el hallazgo de que `ruff` nunca se había ejecutado realmente pese a estar documentado como gate obligatorio desde el Sprint 1).
 
 ---
 

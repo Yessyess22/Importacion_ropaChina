@@ -131,6 +131,46 @@ class UsuarioApiValidacionTests(TestCase):
         self.assertEqual(usuario.email, "nuevo.usuario@trendy.test")
 
 
+class UsuarioViewSetPermisosTests(TestCase):
+    """Regresión: `UsuarioViewSet` debe rechazar a cualquier rol que no
+    sea Administrador tanto en lectura (`list`) como en escritura
+    (`create`). El chequeo de rol vivía solo en `get_queryset()`, que
+    `CreateModelMixin.create()` nunca invoca -- eso permitía que
+    cualquier usuario autenticado se creara a sí mismo una cuenta de
+    Administrador vía POST. Ver `views.py::UsuarioViewSet`."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.password = "Clave-Segura123"
+        self.cliente = _crear_usuario("cliente_priv", Roles.CLIENTE_MAYORISTA, self.password)
+        self.operador = _crear_usuario("operador_priv", Roles.OPERADOR_COMERCIO_EXTERIOR, self.password)
+
+    def _payload_admin(self):
+        return {
+            "username": "usuario_colado",
+            "email": "colado@trendy.test",
+            "password": "Abcdef1!",
+            "rol": Roles.ADMINISTRADOR,
+        }
+
+    def test_cliente_mayorista_no_puede_crear_usuarios(self):
+        self.client.login(username="cliente_priv", password=self.password)
+        response = self.client.post("/api/v1/usuarios/", self._payload_admin())
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Usuario.objects.filter(username="usuario_colado").exists())
+
+    def test_operador_no_puede_crear_usuarios(self):
+        self.client.login(username="operador_priv", password=self.password)
+        response = self.client.post("/api/v1/usuarios/", self._payload_admin())
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Usuario.objects.filter(username="usuario_colado").exists())
+
+    def test_cliente_mayorista_no_puede_listar_usuarios(self):
+        self.client.login(username="cliente_priv", password=self.password)
+        response = self.client.get("/api/v1/usuarios/")
+        self.assertEqual(response.status_code, 403)
+
+
 class MeEndpointTests(TestCase):
     def setUp(self):
         self.client = APIClient()

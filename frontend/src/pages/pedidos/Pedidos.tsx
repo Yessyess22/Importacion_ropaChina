@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Eye, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, Pencil, Plus } from 'lucide-react'
 
 import { api } from '@/services/api'
 import type { PaginatedResponse } from '@/types/api'
@@ -29,7 +29,8 @@ import {
 
 const PAGE_SIZE = 20
 const CLIENTE_MAYORISTA = 'Cliente Mayorista'
-const PEDIDO_ROLES = ['Administrador', 'Operador de Comercio Exterior', CLIENTE_MAYORISTA]
+const GESTION_ROLES = ['Administrador', 'Operador de Comercio Exterior']
+const PEDIDO_ROLES = [...GESTION_ROLES, CLIENTE_MAYORISTA]
 
 function totalPedido(pedido: PedidoMayorista): number {
   return pedido.detalles.reduce((acc, d) => acc + Number(d.precio_unitario) * d.cantidad, 0)
@@ -40,6 +41,7 @@ export function Pedidos() {
   const navigate = useNavigate()
   const esCliente = role === CLIENTE_MAYORISTA
   const canCrear = role != null && PEDIDO_ROLES.includes(role)
+  const canEditar = role != null && GESTION_ROLES.includes(role)
 
   const [items, setItems] = useState<PedidoMayorista[]>([])
   const [loading, setLoading] = useState(true)
@@ -186,15 +188,26 @@ export function Pedidos() {
                   </TableCell>
                   <TableCell>{formatCurrency(totalPedido(item))}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => navigate(`/pedidos/${item.id}`)}
-                    >
-                      <Eye className="size-3.5" />
-                      Ver detalle
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => navigate(`/pedidos/${item.id}`)}
+                        title="Ver detalle"
+                      >
+                        <Eye className="size-3.5" />
+                      </Button>
+                      {canEditar && item.estado === 'PENDIENTE' && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => navigate(`/pedidos/${item.id}/editar`)}
+                          title="Editar pedido"
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

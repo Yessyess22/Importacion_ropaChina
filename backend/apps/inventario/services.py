@@ -57,3 +57,44 @@ def registrar_salida(variante, cantidad, observacion="", origen=None):
 
 def registrar_ajuste(variante, delta, observacion=""):
     return _aplicar_movimiento(variante, MovimientoInventario.Tipo.AJUSTE, delta, observacion)
+
+
+def editar_movimiento(movimiento, cantidad, observacion=""):
+    """Corrige la cantidad/observación de un movimiento ya registrado
+    (solo Administrador, ver permisos en `views.py`). Reaplica la
+    diferencia entre la cantidad anterior y la nueva sobre
+    `stock_disponible` dentro de la misma transacción atómica que usa
+    `_aplicar_movimiento`, para no romper la invariante de que el
+    contador de stock siempre refleje la suma del ledger.
+    """
+    from apps.catalogo.models import VarianteProducto
+
+    if movimiento.origen is not None:
+        raise ConflictError(
+            "Este movimiento fue generado automáticamente por otra operación "
+            "(pedido o importación) y no puede editarse directamente; corrija "
+            "el registro de origen."
+        )
+    if movimiento.tipo == MovimientoInventario.Tipo.ENTRADA and cantidad <= 0:
+        raise ConflictError("Un movimiento de Entrada debe tener una cantidad positiva.")
+    if movimiento.tipo == MovimientoInventario.Tipo.SALIDA and cantidad >= 0:
+        raise ConflictError("Un movimiento de Salida debe tener una cantidad negativa.")
+
+    with transaction.atomic():
+        variante = VarianteProducto.objects.select_for_update().get(pk=movimiento.variante_id)
+        diferencia = cantidad - movimiento.cantidad
+        nuevo_stock = variante.stock_disponible + diferencia
+        if nuevo_stock < 0:
+            raise ConflictError(
+                f"No se puede editar: dejaría el stock de {variante} en negativo "
+                f"(actual {variante.stock_disponible}, diferencia {diferencia})."
+            )
+
+        variante.stock_disponible = nuevo_stock
+        variante.save(update_fields=["stock_disponible", "updated_at"])
+
+        movimiento.cantidad = cantidad
+        movimiento.observacion = observacion
+        movimiento.save(update_fields=["cantidad", "observacion"])
+
+    return variante

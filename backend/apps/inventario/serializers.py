@@ -35,3 +35,20 @@ class AjustarStockSerializer(serializers.Serializer):
         if value == 0:
             raise serializers.ValidationError("El ajuste no puede ser 0: no representaría ningún cambio.")
         return value
+
+
+class EditarMovimientoSerializer(serializers.Serializer):
+    """Corrección administrativa (solo Administrador) de un movimiento ya
+    registrado. `cantidad` es el delta firmado, con el mismo signo que ya
+    almacena el modelo (positivo para Entrada, negativo para Salida,
+    cualquier valor no nulo para Ajuste); la validación de que el signo
+    coincida con el `tipo` del movimiento se hace en
+    `services.editar_movimiento`, que sí tiene acceso a esa información."""
+
+    cantidad = serializers.IntegerField()
+    observacion = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_cantidad(self, value):
+        if value == 0:
+            raise serializers.ValidationError("La cantidad no puede ser 0.")
+        return value

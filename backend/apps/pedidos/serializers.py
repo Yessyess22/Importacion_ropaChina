@@ -71,3 +71,25 @@ class PedidoMayoristaCreateSerializer(serializers.Serializer):
 
 class CambiarEstadoPedidoSerializer(serializers.Serializer):
     estado = serializers.ChoiceField(choices=PedidoMayorista.Estado.choices)
+
+
+class ActualizarDetallesPedidoSerializer(serializers.Serializer):
+    """Reemplazo completo de las líneas de un pedido en estado PENDIENTE
+    (sección "editar pedido"): el cliente envía el carrito final deseado y
+    `services.actualizar_detalles_pedido` calcula el diff contra las
+    líneas actuales para ajustar el stock reservado."""
+
+    detalles = DetallePedidoInputSerializer(many=True)
+
+    def validate_detalles(self, detalles):
+        if not detalles:
+            raise serializers.ValidationError("El pedido debe tener al menos un detalle.")
+        variantes_vistas = set()
+        for item in detalles:
+            variante_id = item["variante"].id
+            if variante_id in variantes_vistas:
+                raise serializers.ValidationError(
+                    "No se puede repetir la misma variante en más de una línea."
+                )
+            variantes_vistas.add(variante_id)
+        return detalles

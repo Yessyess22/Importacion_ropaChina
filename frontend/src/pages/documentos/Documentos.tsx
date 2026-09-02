@@ -76,6 +76,10 @@ export function Documentos() {
     api
       .get<PaginatedResponse<OperacionImportacion>>('/importaciones/?page_size=100')
       .then((data) => setOperaciones(data.results))
+      .catch(() => {
+        setOperaciones([])
+        toast.error('No se pudo cargar la lista de importaciones.')
+      })
       .finally(() => setLoadingOperaciones(false))
   }, [])
 

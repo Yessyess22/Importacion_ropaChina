@@ -10,6 +10,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .models import Usuario
+from .permissions import HasRole, Roles
 from .serializers import LoginSerializer, UsuarioListSerializer, UsuarioMeSerializer, UsuarioWriteSerializer
 
 
@@ -83,20 +84,20 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     Solo el Administrador puede leer y escribir en este endpoint.
     Las contraseñas se hashean en el serializer; nunca se exponen en lecturas.
+
+    El permiso se declara explícitamente en `permission_classes` (no solo
+    dentro de `get_queryset`): `CreateModelMixin.create()` nunca llama a
+    `get_queryset()` al no operar sobre un objeto existente, así que un
+    chequeo de rol que viviera únicamente ahí jamás se ejecutaría en
+    `POST` — cualquier usuario autenticado, sin importar su rol, habría
+    podido crearse una cuenta de Administrador.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasRole(Roles.ADMINISTRADOR)]
     search_fields = ["username", "first_name", "last_name", "email"]
     ordering_fields = ["username", "last_name"]
 
     def get_queryset(self):
-        from apps.usuarios.permissions import Roles
-
-        user = self.request.user
-        if not (user.rol_id and user.rol.nombre == Roles.ADMINISTRADOR):
-            from rest_framework.exceptions import PermissionDenied
-
-            raise PermissionDenied
         return Usuario.objects.select_related("rol").order_by("username")
 
     def get_serializer_class(self):

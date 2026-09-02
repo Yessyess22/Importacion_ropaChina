@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ArrowLeft, Loader2, ShoppingBag, Trash2 } from 'lucide-react'
 
@@ -13,6 +13,7 @@ import { formatCurrency } from '@/utils/formatters'
 import { VarianteSelector } from '@/components/pedidos/VarianteSelector'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Table,
@@ -42,12 +43,18 @@ interface ItemCarrito {
 export function NuevoPedido() {
   const { role } = useAuth()
   const navigate = useNavigate()
+  const { id: pedidoId } = useParams<{ id: string }>()
+  const isEditMode = Boolean(pedidoId)
   const esCliente = role === CLIENTE_MAYORISTA
 
   const [prendas, setPrendas] = useState<Prenda[]>([])
   const [clientes, setClientes] = useState<ClienteMayorista[]>([])
   const [ownCliente, setOwnCliente] = useState<ClienteMayorista | null>(null)
   const [loadingCatalogos, setLoadingCatalogos] = useState(true)
+
+  const [pedidoOriginal, setPedidoOriginal] = useState<PedidoMayorista | null>(null)
+  const [clienteEdicion, setClienteEdicion] = useState<ClienteMayorista | null>(null)
+  const [carritoInicializado, setCarritoInicializado] = useState(false)
 
   const [prendaSeleccionada, setPrendaSeleccionada] = useState('')
   const [clienteId, setClienteId] = useState('')
@@ -75,6 +82,66 @@ export function NuevoPedido() {
       .finally(() => setLoadingCatalogos(false))
   }, [esCliente])
 
+  useEffect(() => {
+    if (!isEditMode || !pedidoId) return
+    let cancelled = false
+    // Si `pedidoId` cambia sin que el componente se desmonte (navegación
+    // directa entre dos URLs `/pedidos/:id/editar`), hay que reconstruir
+    // el carrito desde cero en vez de conservar el de la edición anterior.
+    setPedidoOriginal(null)
+    setClienteEdicion(null)
+    setCarritoInicializado(false)
+    setCarrito([])
+    api
+      .get<PedidoMayorista>(`/pedidos/${pedidoId}/`)
+      .then(async (pedido) => {
+        if (cancelled) return
+        if (pedido.estado !== 'PENDIENTE') {
+          toast.error('Solo se puede editar un pedido mientras está Pendiente.')
+          navigate(`/pedidos/${pedidoId}`)
+          return
+        }
+        setPedidoOriginal(pedido)
+        try {
+          const cliente = await api.get<ClienteMayorista>(`/clientes-mayoristas/${pedido.cliente}/`)
+          if (!cancelled) setClienteEdicion(cliente)
+        } catch {
+          // El mínimo por modelo queda null y el submit se bloquea con un
+          // mensaje claro (ver validación en `handleConfirmar`).
+        }
+      })
+      .catch(() => {
+        toast.error('No se pudo cargar el pedido.')
+        navigate('/pedidos')
+      })
+    return () => { cancelled = true }
+  }, [isEditMode, pedidoId, navigate])
+
+  useEffect(() => {
+    if (!isEditMode || !pedidoOriginal || prendas.length === 0 || carritoInicializado) return
+    const inicial: ItemCarrito[] = pedidoOriginal.detalles.map((detalle) => {
+      const prenda = prendas.find((p) => p.variantes.some((v) => v.id === detalle.variante))
+      const varianteBase: VarianteProductoResumen = detalle.variante_detalle ?? {
+        id: detalle.variante,
+        talla: '',
+        color: '',
+        precio_unitario: detalle.precio_unitario,
+        stock_disponible: 0,
+        estado: 'PUBLICADO',
+      }
+      return {
+        prendaId: prenda?.id ?? 0,
+        prendaLabel: prenda ? `${prenda.codigo_modelo} — ${prenda.nombre}` : `Modelo #${detalle.variante}`,
+        // Las líneas ya existentes muestran/calculan con el precio congelado
+        // del pedido, no el precio vigente de la variante (que pudo cambiar).
+        variante: { ...varianteBase, precio_unitario: detalle.precio_unitario },
+        cantidad: detalle.cantidad,
+      }
+    })
+    setCarrito(inicial)
+    setCarritoInicializado(true)
+  }, [isEditMode, pedidoOriginal, prendas, carritoInicializado])
+
   const prendasDisponibles = useMemo(
     () => prendas.filter((p) => p.variantes.some((v) => v.estado === 'PUBLICADO' && v.stock_disponible > 0)),
     [prendas],
@@ -82,9 +149,11 @@ export function NuevoPedido() {
 
   const prendaActual = prendasDisponibles.find((p) => String(p.id) === prendaSeleccionada)
 
-  const minimoRequerido = esCliente
-    ? ownCliente?.pedido_minimo_modelo ?? null
-    : clientes.find((c) => String(c.id) === clienteId)?.pedido_minimo_modelo ?? null
+  const minimoRequerido = isEditMode
+    ? clienteEdicion?.pedido_minimo_modelo ?? null
+    : esCliente
+      ? ownCliente?.pedido_minimo_modelo ?? null
+      : clientes.find((c) => String(c.id) === clienteId)?.pedido_minimo_modelo ?? null
 
   const totalesPorModelo = useMemo(() => {
     const mapa = new Map<number, { label: string; cantidad: number }>()
@@ -113,9 +182,15 @@ export function NuevoPedido() {
       const idx = prev.findIndex((i) => i.variante.id === variante.id)
       if (idx >= 0) {
         const actualizado = [...prev]
+        const nuevaCantidad = actualizado[idx].cantidad + cantidad
         actualizado[idx] = {
           ...actualizado[idx],
-          cantidad: Math.min(actualizado[idx].cantidad + cantidad, variante.stock_disponible),
+          // En modo edición, `stock_disponible` ya excluye lo que este mismo
+          // pedido tiene reservado, así que topar contra ese valor crudo
+          // subestima el máximo real (ver `actualizarCantidad`, que por la
+          // misma razón tampoco topa en modo edición). El backend igual
+          // valida el stock real al guardar.
+          cantidad: isEditMode ? nuevaCantidad : Math.min(nuevaCantidad, variante.stock_disponible),
         }
         return actualizado
       }
@@ -131,6 +206,11 @@ export function NuevoPedido() {
     setCarrito((prev) => prev.filter((i) => i.variante.id !== varianteId))
   }
 
+  function actualizarCantidad(varianteId: number, cantidad: number) {
+    if (!Number.isInteger(cantidad) || cantidad < 1) return
+    setCarrito((prev) => prev.map((i) => (i.variante.id === varianteId ? { ...i, cantidad } : i)))
+  }
+
   async function handleConfirmar() {
     setSubmitError(null)
 
@@ -138,7 +218,7 @@ export function NuevoPedido() {
       toast.error('Agrega al menos una variante al pedido.')
       return
     }
-    if (!esCliente && !clienteId) {
+    if (!isEditMode && !esCliente && !clienteId) {
       toast.error('Selecciona el cliente mayorista para este pedido.')
       return
     }
@@ -161,15 +241,21 @@ export function NuevoPedido() {
 
     setSubmitting(true)
     try {
-      const payload: { detalles: { variante: number; cantidad: number }[]; cliente?: number } = {
-        detalles: carrito.map((item) => ({ variante: item.variante.id, cantidad: item.cantidad })),
-      }
-      if (!esCliente) payload.cliente = Number(clienteId)
+      const detalles = carrito.map((item) => ({ variante: item.variante.id, cantidad: item.cantidad }))
 
-      const pedido = await api.post<PedidoMayorista>('/pedidos/', payload)
-      toast.success(`Pedido ${pedido.codigo_pedido} registrado correctamente.`)
-      setCarrito([])
-      navigate('/catalogo')
+      if (isEditMode && pedidoId) {
+        const pedido = await api.post<PedidoMayorista>(`/pedidos/${pedidoId}/actualizar-detalles/`, { detalles })
+        toast.success(`Pedido ${pedido.codigo_pedido} actualizado correctamente.`)
+        navigate(`/pedidos/${pedidoId}`)
+      } else {
+        const payload: { detalles: { variante: number; cantidad: number }[]; cliente?: number } = { detalles }
+        if (!esCliente) payload.cliente = Number(clienteId)
+
+        const pedido = await api.post<PedidoMayorista>('/pedidos/', payload)
+        toast.success(`Pedido ${pedido.codigo_pedido} registrado correctamente.`)
+        setCarrito([])
+        navigate('/catalogo')
+      }
     } catch (err) {
       // El backend responde 409 con un `detail` de negocio (mínimo por
       // modelo desactualizado, o stock insuficiente en una condición de
@@ -177,29 +263,52 @@ export function NuevoPedido() {
       // disponible, ver `inventario/services._aplicar_movimiento`). Se
       // muestra como banner persistente junto al carrito, no solo en un
       // toast que desaparece.
-      const mensaje = err instanceof Error ? err.message : 'No se pudo registrar el pedido.'
+      const mensajeDefault = isEditMode ? 'No se pudo actualizar el pedido.' : 'No se pudo registrar el pedido.'
+      const mensaje = err instanceof Error ? err.message : mensajeDefault
       setSubmitError(mensaje)
-      toast.error('No se pudo registrar el pedido', { description: mensaje })
+      toast.error(mensajeDefault, { description: mensaje })
     } finally {
       setSubmitting(false)
     }
   }
 
+  if (isEditMode && (!pedidoOriginal || !carritoInicializado)) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon-sm" onClick={() => navigate('/catalogo')}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => navigate(isEditMode ? `/pedidos/${pedidoId}` : '/catalogo')}
+        >
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Nuevo Pedido</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {isEditMode ? `Editar Pedido — ${pedidoOriginal?.codigo_pedido}` : 'Nuevo Pedido'}
+          </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Agrega variantes al carrito respetando la cantidad mínima por modelo.
           </p>
         </div>
       </div>
 
-      {!esCliente && (
+      {isEditMode && clienteEdicion && (
+        <p className="text-xs text-muted-foreground">
+          Cliente: <span className="font-medium text-foreground">{clienteEdicion.razon_social}</span>
+          {' · '}Cantidad mínima por modelo:{' '}
+          <span className="font-medium text-foreground">{clienteEdicion.pedido_minimo_modelo} unidades</span>
+        </p>
+      )}
+
+      {!isEditMode && !esCliente && (
         <Card>
           <CardContent className="flex flex-col gap-1.5">
             <Label htmlFor="cliente">Cliente Mayorista <span className="text-destructive">*</span></Label>
@@ -295,7 +404,16 @@ export function NuevoPedido() {
                     <TableRow key={item.variante.id}>
                       <TableCell className="text-sm">{item.prendaLabel}</TableCell>
                       <TableCell className="text-sm">{item.variante.talla} · {item.variante.color}</TableCell>
-                      <TableCell className="text-sm">{item.cantidad}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min={1}
+                          step={1}
+                          value={item.cantidad}
+                          onChange={(e) => actualizarCantidad(item.variante.id, Number(e.target.value))}
+                          className="h-8 w-20"
+                        />
+                      </TableCell>
                       <TableCell className="text-sm">{formatCurrency(Number(item.variante.precio_unitario))}</TableCell>
                       <TableCell className="text-sm font-medium">
                         {formatCurrency(Number(item.variante.precio_unitario) * item.cantidad)}
@@ -339,7 +457,7 @@ export function NuevoPedido() {
 
               <Button onClick={handleConfirmar} disabled={submitting} className="self-end">
                 {submitting && <Loader2 className="size-4 animate-spin" />}
-                Confirmar Pedido
+                {isEditMode ? 'Guardar Cambios' : 'Confirmar Pedido'}
               </Button>
             </>
           )}

@@ -15,6 +15,7 @@ import {
   Package,
   Ship,
   ShoppingCart,
+  Truck,
   UserCheck,
   Users,
   X,
@@ -80,6 +81,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Agentes Aduanales',
     href: '/agentes-aduanales',
     icon: Briefcase,
+    allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Agente Aduanal'],
+  },
+  {
+    label: 'Transportistas',
+    href: '/transportistas',
+    icon: Truck,
     allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Agente Aduanal'],
   },
   {

@@ -42,11 +42,15 @@ def crear_operacion(validated_data, usuario):
     return operacion
 
 
-def actualizar_operacion(operacion, validated_data):
+def actualizar_operacion(operacion, validated_data, usuario):
+    if operacion.estado in (OperacionImportacion.Estado.LIBERADA, OperacionImportacion.Estado.CANCELADA):
+        raise ConflictError("No se puede editar una operación liberada o cancelada.")
+
     for campo, valor in validated_data.items():
         setattr(operacion, campo, valor)
     operacion.valor_cif = calcular_cif(operacion.valor_fob, operacion.valor_flete, operacion.valor_seguro)
     operacion.save()
+    auditoria_services.registrar(usuario, "actualizar_importacion", operacion)
     return operacion
 
 

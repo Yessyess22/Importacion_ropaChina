@@ -56,7 +56,9 @@ class OperacionImportacionViewSet(viewsets.ModelViewSet):
         serializer.instance = services.crear_operacion(serializer.validated_data, self.request.user)
 
     def perform_update(self, serializer):
-        serializer.instance = services.actualizar_operacion(serializer.instance, serializer.validated_data)
+        serializer.instance = services.actualizar_operacion(
+            serializer.instance, serializer.validated_data, self.request.user
+        )
 
     @action(detail=True, methods=["post"], url_path="actualizar-estado")
     def actualizar_estado(self, request, pk=None):
@@ -97,6 +99,14 @@ class DetalleImportacionViewSet(viewsets.ModelViewSet):
         if self.action in ("create", "update", "partial_update", "destroy"):
             return [IsAuthenticated(), HasRole(*GESTION_ROLES)()]
         return super().get_permissions()
+
+    def perform_update(self, serializer):
+        if serializer.instance.operacion.estado in (
+            OperacionImportacion.Estado.LIBERADA,
+            OperacionImportacion.Estado.CANCELADA,
+        ):
+            raise ConflictError("No se puede editar un detalle de una operación liberada o cancelada.")
+        serializer.save()
 
     def perform_destroy(self, instance):
         if instance.operacion.estado in (

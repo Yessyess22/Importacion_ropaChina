@@ -10,6 +10,7 @@ from . import services
 from .models import MovimientoInventario
 from .serializers import (
     AjustarStockSerializer,
+    EditarMovimientoSerializer,
     MovimientoInventarioSerializer,
     RegistrarMovimientoSerializer,
 )
@@ -35,7 +36,7 @@ class MovimientoInventarioViewSet(viewsets.ReadOnlyModelViewSet):
     def get_permissions(self):
         if self.action in ("entrada", "salida"):
             return [IsAuthenticated(), HasRole(*GESTION_ROLES)()]
-        if self.action == "ajuste":
+        if self.action in ("ajuste", "editar"):
             return [IsAuthenticated(), HasRole(Roles.ADMINISTRADOR)()]
         return super().get_permissions()
 
@@ -59,3 +60,11 @@ class MovimientoInventarioViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
         variante = services.registrar_ajuste(**serializer.validated_data)
         return Response(VarianteProductoSerializer(variante).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["patch"])
+    def editar(self, request, pk=None):
+        movimiento = self.get_object()
+        serializer = EditarMovimientoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        variante = services.editar_movimiento(movimiento, **serializer.validated_data)
+        return Response(VarianteProductoSerializer(variante).data, status=status.HTTP_200_OK)

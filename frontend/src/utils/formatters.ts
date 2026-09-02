@@ -7,6 +7,14 @@ export function formatCurrency(amount: number): string {
   return `${BOB_FORMATTER.format(amount)} BOB`
 }
 
+export function formatDateTime(dateString: string): string {
+  return new Date(dateString).toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+export function formatTime(dateString: string): string {
+  return new Date(dateString).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+}
+
 export function formatDate(dateString: string): string {
   // Las fechas puras "YYYY-MM-DD" (sin hora) las interpreta `Date` como
   // medianoche UTC; en zonas horarias negativas (ej. America/La_Paz)
