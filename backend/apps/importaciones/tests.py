@@ -19,9 +19,7 @@ def _crear_usuario(username, rol_nombre, password="Clave-Segura123"):
 
 class OperacionImportacionTests(TestCase):
     def setUp(self):
-        self.proveedor = Proveedor.objects.create(
-            razon_social="Fábrica Uno", nit="111", fabrica="F1"
-        )
+        self.proveedor = Proveedor.objects.create(razon_social="Fábrica Uno", nit="111", fabrica="F1")
 
     def _crear_operacion(self, codigo_unico="OP-0001"):
         return OperacionImportacion.objects.create(

@@ -17,13 +17,9 @@ class PedidoMayorista(models.Model):
         CANCELADO = "CANCELADO", "Cancelado"
 
     codigo_pedido = models.CharField(max_length=30, unique=True)
-    cliente = models.ForeignKey(
-        ClienteMayorista, on_delete=models.PROTECT, related_name="pedidos"
-    )
+    cliente = models.ForeignKey(ClienteMayorista, on_delete=models.PROTECT, related_name="pedidos")
     fecha = models.DateField()
-    estado = models.CharField(
-        max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
-    )
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,12 +41,8 @@ class DetallePedido(models.Model):
     pedidos ya realizados no deben verse afectados retroactivamente.
     """
 
-    pedido = models.ForeignKey(
-        PedidoMayorista, on_delete=models.CASCADE, related_name="detalles"
-    )
-    variante = models.ForeignKey(
-        VarianteProducto, on_delete=models.PROTECT, related_name="detalles_pedido"
-    )
+    pedido = models.ForeignKey(PedidoMayorista, on_delete=models.CASCADE, related_name="detalles")
+    variante = models.ForeignKey(VarianteProducto, on_delete=models.PROTECT, related_name="detalles_pedido")
     cantidad = models.PositiveIntegerField()
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -58,9 +50,7 @@ class DetallePedido(models.Model):
         verbose_name = "Detalle de pedido"
         verbose_name_plural = "Detalles de pedido"
         constraints = [
-            models.UniqueConstraint(
-                fields=["pedido", "variante"], name="unique_variante_por_pedido"
-            )
+            models.UniqueConstraint(fields=["pedido", "variante"], name="unique_variante_por_pedido")
         ]
 
     def __str__(self) -> str:

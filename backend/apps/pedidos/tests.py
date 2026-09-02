@@ -63,9 +63,7 @@ class PedidoMayoristaTests(TestCase):
         self.assertEqual(detalle.variante, self.variante)
 
     def test_codigo_pedido_es_unico(self):
-        PedidoMayorista.objects.create(
-            codigo_pedido="PED-0004", cliente=self.cliente, fecha="2026-08-28"
-        )
+        PedidoMayorista.objects.create(codigo_pedido="PED-0004", cliente=self.cliente, fecha="2026-08-28")
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():

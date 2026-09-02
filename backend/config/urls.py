@@ -6,6 +6,7 @@ Las rutas de negocio versionadas viven bajo /api/v1/ (ver
 archivo solo agrega infraestructura: admin, health check, autenticación
 (Fase 3, sin cambios) y documentación OpenAPI.
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

@@ -1,9 +1,90 @@
-# Plan de Tareas — Sprint 2 Activo
+# Plan de Tareas — Fase 5 Completa (Sprint 4 cerrado)
 ## Trendy Import SRL · Fase 5
 
-**Sprint:** 2 — Operaciones de Importación, Documentos y Costeo
-**Período:** 2026-09-21 → 2026-10-11 (planificado; trabajo adelantado desde 2026-08-30)
+**Sprint:** 4 — Reportes, Bitácora y Suite E2E Completa (último de la Fase 5)
+**Período:** 2026-11-02 → 2026-11-22 (planificado; trabajo adelantado desde 2026-09-02, cerrado el mismo día)
 **Equipo:** Shirley Yessica Escobar Gutierrez · Oscar Alejandro Segovia Villarreal
+
+> Nota: este archivo se saltó el tablero detallado de Sprint 3 (su seguimiento quedó solo en `docs/02-SESSION_MEM.md`). Los tableros de Sprint 1, 2 y 4 sí están documentados aquí en detalle.
+
+---
+
+## Tablero de Tareas — Sprint 4 (cerrado 2026-09-02)
+
+### 🔴 Pendiente
+
+*(Ninguna — Sprint 4 completo. Fase 5 completa: no hay sprint siguiente planificado.)*
+
+### 🟡 En progreso
+
+*(Ninguna)*
+
+### ✅ Completado — Sprint 4
+
+| ID | Tarea | Responsable | Fecha cierre | PR |
+|----|-------|-------------|-------------|-----|
+| **S4-T01** | Vista `/reportes` — gráfico de barras de importaciones por estado (cantidad + CIF total) + filtro de fechas | Agente | 2026-09-02 | `main` |
+| **S4-T02** | Vista `/reportes` — gráfico de barras de pedidos por estado + filtro de cliente + exportación CSV | Agente | 2026-09-02 | `main` |
+| **S4-T03** | Vista `/auditoria` — tabla paginada de bitácora con filtros de acción y usuario; backend `apps.auditoria` construido desde cero | Agente | 2026-09-02 | `main` |
+| **S4-T04** | E2E Playwright: cobertura del flujo de reportes y bitácora (`tests/reportes.spec.ts`, 5 escenarios) | Agente | 2026-09-02 | `main` |
+| **S4-T05** | E2E Playwright: regresión del flujo de importación — rama de cancelación + filtro de estado | Agente | 2026-09-02 | `main` |
+| **S4-T06** | Cobertura de tests backend: `auditoria` (endpoint nuevo), `reportes` (GAP-5), fix `terceros` (GAP-10), `pytest`/`coverage` instalados (GAP-9) | Agente | 2026-09-02 | `main` |
+| **S4-T07** | QA final: `tsc`, `oxlint`, `ruff` instalado y configurado (GAP-14), grep de invariantes, build, `migrate --check`, `check --deploy`, suite E2E completa | Agente | 2026-09-02 | `main` |
+
+---
+
+## Especificaciones técnicas — Sprint 4
+
+### S4-T01/T02 · Vista Reportes
+
+```
+frontend/src/pages/reportes/Reportes.tsx
+frontend/src/components/charts/BarChart.tsx
+frontend/src/utils/csv.ts
+frontend/src/types/reportes.ts
+```
+
+**Endpoints:** `GET /api/v1/reportes/importaciones/?fecha_desde=&fecha_hasta=` (agrupado por estado: `cantidad`, `total_cif`), `GET /api/v1/reportes/pedidos/?cliente=` (agrupado por estado: `cantidad`), `GET /api/v1/clientes-mayoristas/?page_size=100` (para poblar el `Select` de cliente).
+
+**Reglas de UI:**
+- Dos secciones independientes ("Importaciones por Estado", "Pedidos por Estado"), cada una con su propia fila de filtros — no se comparte un filtro global entre ambas porque escopan datos distintos.
+- `BarChart` es un componente SVG propio, sin dependencia nueva de gráficos de terceros. Usa un único tono `fill-chart-1` (token `--chart-1` de `index.css`) porque la categoría (estado) ya la identifica la etiqueta del eje X — un color por barra sería decorativo, no informativo, en un gráfico de una sola serie.
+- El CSV se genera enteramente en el cliente (`downloadCsv()`) a partir de los datos ya cargados por el gráfico/tabla — no hay endpoint de exportación en el backend.
+- Roles permitidos: Administrador, Operador de Comercio Exterior, Contabilidad — **igual que `REPORTES_ROLES` del backend** (`apps/reportes/views.py`). No incluir Agente Aduanal (ver GAP-15 en `05-FINDINGS_DEUDA.md`: el backend nunca lo autorizó, aunque una versión anterior de la ruta del frontend sí lo dejaba pasar).
+
+### S4-T03 · Vista Bitácora
+
+```
+backend/apps/auditoria/serializers.py
+backend/apps/auditoria/views.py
+backend/apps/auditoria/urls.py
+frontend/src/pages/auditoria/Auditoria.tsx
+frontend/src/types/auditoria.ts
+```
+
+**Endpoint:** `GET /api/v1/bitacora/?page=&search=&usuario=` — `ReadOnlyModelViewSet`, exclusivo de Administrador. `search` filtra por texto sobre `accion` (icontains, vía `SearchFilter`); `usuario` filtra por id exacto (vía `filterset_fields`). Nunca acepta POST/PATCH/DELETE — la única escritura es `auditoria_services.registrar()` desde los servicios de dominio.
+
+**Reglas de UI:**
+- El `Select` de usuario se puebla desde `GET /usuarios/?page_size=100` (mismo endpoint que consume `/usuarios`, acceso ya restringido a Administrador).
+- El botón "Ver" de cada fila (deshabilitado si `detalle` está vacío) abre un `Dialog` con el JSON de `detalle` formateado en un `<pre>` — no se intenta dar un formato específico por tipo de acción, el JSON crudo es suficiente para el caso de uso de auditoría.
+
+### S4-T04/T05 · E2E de cierre de Fase 5
+
+```
+tests/reportes.spec.ts
+tests/importaciones.spec.ts (E2 agregado)
+```
+
+**Cobertura nueva de `reportes.spec.ts`:** gráfico de importaciones visible por `aria-label`, exportación CSV (verificada por evento `download` + nombre de archivo), filtro de fechas sin resultados, exportación CSV de pedidos, bloqueo de Cliente Mayorista en `/reportes` y en `/auditoria`, listado y filtro por acción de la bitácora.
+
+**Cobertura nueva en `importaciones.spec.ts` (E2, regresión):** rama de cancelación (`REGISTRADA → CANCELADA`) no cubierta por el flujo feliz de S2-T07, y verificación de que el filtro de búsqueda por código de `/importaciones` (S2-T01) sigue funcionando tras la transición.
+
+### S4-T06/T07 · Deuda de testing e infraestructura cerrada
+
+- `backend/requirements.txt`: se agregaron `pytest`, `pytest-django`, `coverage` y `ruff` — ninguno estaba instalado pese a estar documentados como gates obligatorios desde Sprint 1 en `08-CONTROL_SESION.md` (GAP-9 y GAP-14 en `05-FINDINGS_DEUDA.md`).
+- `backend/pyproject.toml` (nuevo): fija `select = ["E", "F", "W", "I"]` para `ruff`, en vez de depender de los defaults no documentados de la versión instalada (que incluían reglas como `RUF012`, incompatibles con los `Meta.fields = [...]` idiomáticos de DRF).
+- `apps/terceros/tests.py`: corregida la URL de un test que apuntaba a `/api/v1/clientes/` (nunca existió) en vez de `/api/v1/clientes-mayoristas/` — GAP-10 era un bug del test, no de la API.
+- Resultado medido: `coverage run manage.py test apps` → 85/85 tests, 94% de cobertura total; `npx playwright test` (raíz) → 12/12 PASSED.
 
 ---
 

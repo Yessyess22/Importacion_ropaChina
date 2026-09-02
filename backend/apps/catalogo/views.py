@@ -79,9 +79,7 @@ class VarianteProductoViewSet(viewsets.ModelViewSet):
         queryset = VarianteProducto.objects.select_related("prenda").all()
         user = self.request.user
         if getattr(user, "rol_id", None) and user.rol.nombre == Roles.CLIENTE_MAYORISTA:
-            queryset = queryset.filter(
-                estado=VarianteProducto.Estado.PUBLICADO, prenda__activo=True
-            )
+            queryset = queryset.filter(estado=VarianteProducto.Estado.PUBLICADO, prenda__activo=True)
         return queryset
 
     def get_permissions(self):

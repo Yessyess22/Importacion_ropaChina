@@ -21,6 +21,8 @@ import { NuevoPedido } from '@/pages/pedidos/NuevoPedido'
 import { Pedidos } from '@/pages/pedidos/Pedidos'
 import { PedidoDetalle } from '@/pages/pedidos/PedidoDetalle'
 import { Stock } from '@/pages/inventario/Stock'
+import { Reportes } from '@/pages/reportes/Reportes'
+import { Auditoria } from '@/pages/auditoria/Auditoria'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import type { Role } from '@/types/auth'
@@ -107,15 +109,6 @@ function Dashboard() {
           })}
         </div>
       </div>
-    </div>
-  )
-}
-
-function ModulePlaceholder({ title }: { title: string }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-      <p className="text-sm text-muted-foreground">Módulo en desarrollo.</p>
     </div>
   )
 }
@@ -272,8 +265,8 @@ function AppRoutes() {
         <Route
           path="reportes"
           element={
-            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, AGENTE_ADUANAL, CONTABILIDAD]}>
-              <ModulePlaceholder title="Reportes" />
+            <ProtectedRoute allowedRoles={[ADMINISTRADOR, OPERADOR, CONTABILIDAD]}>
+              <Reportes />
             </ProtectedRoute>
           }
         />
@@ -282,7 +275,7 @@ function AppRoutes() {
           path="auditoria"
           element={
             <ProtectedRoute allowedRoles={[ADMINISTRADOR]}>
-              <ModulePlaceholder title="Bitácora" />
+              <Auditoria />
             </ProtectedRoute>
           }
         />

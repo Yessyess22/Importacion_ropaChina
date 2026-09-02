@@ -27,11 +27,6 @@ def HasRole(*roles: str):
 
         def has_permission(self, request, view):
             user = request.user
-            return bool(
-                user
-                and user.is_authenticated
-                and user.rol_id
-                and user.rol.nombre in roles
-            )
+            return bool(user and user.is_authenticated and user.rol_id and user.rol.nombre in roles)
 
     return _HasRole

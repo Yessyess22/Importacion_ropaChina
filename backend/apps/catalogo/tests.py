@@ -112,9 +112,12 @@ class PrendaApiTests(TestCase):
         # visible, y verificamos que la variante en borrador no se filtre
         # dentro de `variantes` (Sprint 3 S3-T01).
         VarianteProducto.objects.create(
-            prenda=self.prenda, talla="L", color="Azul",
+            prenda=self.prenda,
+            talla="L",
+            color="Azul",
             precio_unitario=Decimal("100.00"),
-            estado=VarianteProducto.Estado.PUBLICADO, stock_disponible=5,
+            estado=VarianteProducto.Estado.PUBLICADO,
+            stock_disponible=5,
         )
         self.client.login(username="cliente_cat", password=self.password)
         response = self.client.get("/api/v1/prendas/")
@@ -126,9 +129,12 @@ class PrendaApiTests(TestCase):
     def test_cliente_no_ve_prenda_con_variante_publicada_sin_stock(self):
         prenda_sin_stock = Prenda.objects.create(codigo_modelo="VC-101", nombre="Sin stock")
         VarianteProducto.objects.create(
-            prenda=prenda_sin_stock, talla="S", color="Negro",
+            prenda=prenda_sin_stock,
+            talla="S",
+            color="Negro",
             precio_unitario=Decimal("50.00"),
-            estado=VarianteProducto.Estado.PUBLICADO, stock_disponible=0,
+            estado=VarianteProducto.Estado.PUBLICADO,
+            stock_disponible=0,
         )
         self.client.login(username="cliente_cat", password=self.password)
         response = self.client.get("/api/v1/prendas/")

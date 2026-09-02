@@ -87,3 +87,47 @@ test('E1: flujo completo — registrar importación con línea, avanzar por los 
   // Liberada es un estado terminal: ya no debe ofrecerse "Cambiar Estado"
   await expect(page.getByRole('button', { name: /cambiar estado/i })).toHaveCount(0)
 })
+
+/**
+ * S4-T05 — regresión: la transición de cancelación (rama alterna al
+ * pipeline lineal feliz de E1) deja la operación en un estado terminal
+ * y el filtro de estado de `/importaciones` (S2-T01) la sigue mostrando.
+ */
+test('E2 (regresión): cancelar una importación registrada la deja terminal y visible en el filtro de estado', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('Usuario').fill(ADMIN_USERNAME)
+  await page.getByLabel('Contraseña').fill(ADMIN_PASSWORD)
+  await page.getByRole('button', { name: /ingresar/i }).click()
+  await page.waitForURL('/')
+
+  const codigoUnico = `IMP-E2E-CANCEL-${Date.now()}`
+
+  await page.goto('/importaciones/nueva')
+  await page.locator('#codigo_unico').fill(codigoUnico)
+  await page.locator('#proveedor').click()
+  await page.getByRole('option').first().click()
+  await page.locator('#fecha_registro').fill('2026-08-30')
+  await page.locator('#valor_fob').fill('500')
+  await page.locator('#valor_flete').fill('50')
+  await page.locator('#valor_seguro').fill('10')
+  await page.getByRole('button', { name: /registrar importación/i }).click()
+
+  await page.waitForURL(/\/importaciones\/\d+$/)
+  await expect(page.getByText(codigoUnico)).toBeVisible()
+
+  await page.getByRole('button', { name: /cambiar estado/i }).click()
+  await page.getByRole('button', { name: /cancelar operación/i }).click()
+  await page.getByRole('button', { name: /^confirmar$/i }).click()
+  await expect(page.locator('[data-sonner-toast]').first()).toBeVisible({ timeout: 5_000 })
+  await expect(page.getByText('Cancelada', { exact: true })).toBeVisible()
+
+  // Cancelada es terminal: no se ofrece ninguna transición más.
+  await expect(page.getByRole('button', { name: /cambiar estado/i })).toHaveCount(0)
+
+  // Regresión de S2-T01: el filtro de estado de la lista sigue funcionando
+  // y localiza la operación recién cancelada.
+  await page.goto('/importaciones')
+  await page.getByPlaceholder(/buscar por código/i).fill(codigoUnico)
+  await expect(page.getByText(codigoUnico)).toBeVisible()
+  await expect(page.getByText('Cancelada', { exact: true })).toBeVisible()
+})

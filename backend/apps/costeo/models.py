@@ -13,9 +13,7 @@ class Costeo(models.Model):
     OperacionImportacion.valor_cif.
     """
 
-    operacion = models.OneToOneField(
-        OperacionImportacion, on_delete=models.CASCADE, related_name="costeo"
-    )
+    operacion = models.OneToOneField(OperacionImportacion, on_delete=models.CASCADE, related_name="costeo")
     costo_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     fecha_calculo = models.DateTimeField(auto_now=True)
     observaciones = models.TextField(blank=True)
@@ -35,9 +33,7 @@ class Tributo(models.Model):
         ARANCEL = "ARANCEL", "Arancel"
         IVA = "IVA", "IVA"
 
-    costeo = models.ForeignKey(
-        Costeo, on_delete=models.CASCADE, related_name="tributos"
-    )
+    costeo = models.ForeignKey(Costeo, on_delete=models.CASCADE, related_name="tributos")
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     partida_arancelaria = models.CharField(max_length=20, blank=True)
     base_imponible = models.DecimalField(max_digits=12, decimal_places=2)

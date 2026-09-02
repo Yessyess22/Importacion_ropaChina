@@ -53,9 +53,7 @@ def actualizar_operacion(operacion, validated_data):
 def cambiar_estado(operacion, nuevo_estado, usuario):
     permitidos = TRANSICIONES_VALIDAS.get(operacion.estado, set())
     if nuevo_estado not in permitidos:
-        raise ConflictError(
-            f"No se puede pasar de '{operacion.estado}' a '{nuevo_estado}'."
-        )
+        raise ConflictError(f"No se puede pasar de '{operacion.estado}' a '{nuevo_estado}'.")
 
     with transaction.atomic():
         estado_anterior = operacion.estado

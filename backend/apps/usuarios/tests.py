@@ -18,9 +18,7 @@ class UsuarioRolTests(TestCase):
 
 def _crear_usuario(username, rol_nombre, password="Clave-Segura123", is_active=True):
     rol, _ = Rol.objects.get_or_create(nombre=rol_nombre)
-    return Usuario.objects.create_user(
-        username=username, password=password, rol=rol, is_active=is_active
-    )
+    return Usuario.objects.create_user(username=username, password=password, rol=rol, is_active=is_active)
 
 
 class LoginEndpointTests(TestCase):

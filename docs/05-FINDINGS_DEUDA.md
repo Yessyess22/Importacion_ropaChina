@@ -2,8 +2,8 @@
 
 > Registro vivo de brechas de implementación, bugs conocidos y mejoras pendientes detectadas durante la revisión de código o el trabajo de sprint. Cada ítem tiene un propietario y un sprint objetivo de resolución.
 
-**Última actualización:** 2026-08-30 (post-auditoría de Fase 4)
-**Fuente de la auditoría:** [`docs/08-AUDITORIA_CODIGO.md`](08-AUDITORIA_CODIGO.md)
+**Última actualización:** 2026-09-02 (cierre de Sprint 4 — Fase 5 completa)
+**Fuente de la auditoría:** [`docs/09-AUDITORIA_CODIGO.md`](09-AUDITORIA_CODIGO.md)
 
 ---
 
@@ -15,9 +15,9 @@
 |-------|-------|
 | **Severidad** | 🔴 Crítico |
 | **Detectado** | 2026-08-30 |
-| **Sprint objetivo** | Sprints 1, 2 y 3 |
+| **Sprint objetivo** | Sprints 1, 2, 3 y 4 |
 | **Propietario** | Shirley + Oscar |
-| **Estado** | 🟡 Parcial — Sprints 1 y 2 resueltos, Sprint 3 pendiente |
+| **Estado** | ✅ Resuelto — Sprints 1, 2, 3 y 4 completos |
 
 **Descripción:** Todas las rutas del frontend excepto `/login` y `/` (dashboard mínimo) renderizan un componente `ModulePlaceholder` sin lógica de consumo de API. El backend tiene una API REST completa y funcional, pero no existe ninguna pantalla de negocio construida para: Catálogo, Importaciones, Pedidos, Costeo, Inventario, Reportes ni Bitácora.
 
@@ -35,9 +35,17 @@
 - ✅ `/costeo` (S2-T05) — selector de operación, formulario de tributos, cálculo de costo total nacionalizado.
 - ✅ `/tipo-cambio` (S2-T06) — CRUD completo (no existía ni la ruta ni el ítem de sidebar antes de esta tarea).
 
-**Pendiente (Sprint 3):**
-- Catálogo y Pedidos (`/catalogo`, `/pedidos`) — ver `04-SPRINTS.md`.
-- `/stock`, `/reportes`, `/auditoria` quedan para Sprint 3/4 según planificación.
+**Progreso Sprint 3 (resuelto):**
+- ✅ `/catalogo` (S3-T01) — grid de prendas con filtros de talla/color/categoría.
+- ✅ `/pedidos/nuevo` (S3-T02/T03) — `VarianteSelector` + carrito con validación de mínimo.
+- ✅ `/pedidos` (S3-T04) y `/pedidos/:id` (S3-T05) — lista y detalle con cambio de estado.
+- ✅ `/stock` (S3-T06) — inventario con ledger de movimientos por variante.
+
+**Progreso Sprint 4 (resuelto — cierre de GAP-1):**
+- ✅ `/reportes` (S4-T01/T02) — gráficos de barras (importaciones por estado + CIF, pedidos por estado) con filtros y exportación CSV.
+- ✅ `/auditoria` (S4-T03) — bitácora paginada con filtro por acción y usuario. Requirió construir el backend completo (`serializers.py`, `views.py`, `urls.py` de `apps.auditoria`), que no existía.
+
+No quedan vistas de negocio en `ModulePlaceholder`: las 13 rutas del mapa de `06-TASK_PLAN.md` están implementadas.
 
 ---
 
@@ -100,12 +108,11 @@
 | **Detectado** | 2026-08-30 |
 | **Sprint objetivo** | Sprint 4 — Tarea S4-T06 |
 | **Propietario** | Shirley |
-| **Estado** | 🔴 Abierto |
+| **Estado** | ✅ Resuelto (2026-09-02) |
 
-**Descripción:** `backend/apps/reportes/tests.py` tiene 25 líneas. Los tests probablemente solo verifican que los endpoints responden 200. Faltan tests para:
-- Filtro `fecha_desde` / `fecha_hasta` en `ReporteImportacionesView`.
-- Filtro por `cliente` en `ReportePedidosView`.
-- Correctitud de la agregación `Sum(valor_cif)` y `Count(id)` por estado.
+**Descripción original:** `backend/apps/reportes/tests.py` tenía 25 líneas. Los tests solo verificaban que los endpoints respondían 200. Faltaban tests para el filtro de fechas, el filtro por cliente y la correctitud de la agregación.
+
+**Resolución aplicada:** `backend/apps/reportes/tests.py` ampliado a 3 clases con 9 tests: `ReporteImportacionesAgregacionTests` (agregación `Count`/`Sum` por estado, filtro `fecha_desde`, `fecha_hasta` y rango combinado) y `ReportePedidosAgregacionTests` (agregación por estado sin filtro y filtro por `cliente`), además de la clase de permisos original.
 
 ---
 
@@ -163,11 +170,13 @@ Verificado end-to-end: `curl -I http://localhost/media/.../archivo.pdf` → `200
 |-------|-------|
 | **Severidad** | 🟡 Medio |
 | **Detectado** | 2026-08-30 (Sprint 2, verificación previa a S2-T03) |
-| **Sprint objetivo** | Sin asignar |
-| **Propietario** | Sin asignar |
-| **Estado** | 🔴 Abierto |
+| **Sprint objetivo** | Sprint 4 — Tarea S4-T06 |
+| **Propietario** | Oscar |
+| **Estado** | ✅ Resuelto (2026-09-02) |
 
-**Descripción:** `pytest` no figura en `backend/requirements.txt` y el ejecutable no existe en el contenedor (`docker compose exec backend pytest` → `executable file not found`), a pesar de que `docs/01-BITACORA_DESARROLLO.md` (Fase 5, S1-T09/T10) registra `pytest apps/auditoria/ -v → 7 passed`. Además, `apps/auditoria/tests.py` importa `pytest` directamente, por lo que `python manage.py test apps` falla con `ModuleNotFoundError: No module named 'pytest'` en vez de correr esos tests. Es decir: la suite de auditoría no es ejecutable hoy con ninguno de los dos comandos documentados en `08-CONTROL_SESION.md`. No se investigó ni corrigió en esta sesión por estar fuera del alcance de S2-T01/S2-T03; requiere decidir si se agrega `pytest`/`pytest-django` a `requirements.txt` y se reconstruye la imagen, o se reescribe `auditoria/tests.py` sobre `django.test.TestCase` para consistencia con el resto de apps.
+**Descripción original:** `pytest` no figuraba en `backend/requirements.txt` y el ejecutable no existía en el contenedor, a pesar de que `docs/01-BITACORA_DESARROLLO.md` (Fase 5, S1-T09/T10) registraba `pytest apps/auditoria/ -v → 7 passed`. `apps/auditoria/tests.py` importa `pytest` directamente, por lo que `python manage.py test apps` fallaba con `ModuleNotFoundError`.
+
+**Resolución aplicada:** se agregaron `pytest==8.*`, `pytest-django==4.*` y `coverage==7.*` a `backend/requirements.txt` y se reconstruyó la imagen del backend (`docker compose build backend`). `python manage.py test apps` y `coverage run manage.py test apps` corren ahora sin error de import — 85/85 tests en verde, 94% de cobertura total (`coverage report`).
 
 ---
 
@@ -176,11 +185,45 @@ Verificado end-to-end: `curl -I http://localhost/media/.../archivo.pdf` → `200
 | Campo | Valor |
 |-------|-------|
 | **Severidad** | 🟢 Bajo |
-| **Sprint objetivo** | Sin asignar |
-| **Propietario** | Sin asignar |
-| **Estado** | 🔴 Abierto |
+| **Sprint objetivo** | Sprint 4 — Tarea S4-T06 |
+| **Propietario** | Oscar |
+| **Estado** | ✅ Resuelto (2026-09-02) |
 
-**Descripción:** `apps.terceros.tests.ClienteMayoristaApiTests.test_cliente_consulta_su_propio_registro` falla con `404 != 200`. Confirmado con `git stash` que la falla existe también en `main` sin los cambios de Sprint 2 (S2-T01/S2-T03) — no es una regresión introducida en esta sesión. Pendiente de investigar si es un problema de URL (`/clientes-mayoristas/{id}/` vs. lookup por usuario) o de datos de prueba.
+**Descripción original:** `apps.terceros.tests.ClienteMayoristaApiTests.test_cliente_consulta_su_propio_registro` fallaba con `404 != 200`.
+
+**Causa raíz encontrada:** el test hacía `GET /api/v1/clientes/`, una URL que nunca existió — el router de `terceros/urls.py` registra el `ClienteMayoristaViewSet` bajo `clientes-mayoristas`, no `clientes`. Era un error en el propio test (URL equivocada), no un bug de la API.
+
+**Resolución aplicada:** corregida la URL en `backend/apps/terceros/tests.py` a `/api/v1/clientes-mayoristas/`.
+
+---
+
+### GAP-14 — `ruff` nunca se había ejecutado realmente contra el backend
+
+| Campo | Valor |
+|-------|-------|
+| **Severidad** | 🟡 Medio |
+| **Detectado** | 2026-09-02 (Sprint 4, S4-T07 — QA final) |
+| **Propietario** | Oscar |
+| **Estado** | ✅ Resuelto (2026-09-02) |
+
+**Descripción:** `docs/08-CONTROL_SESION.md` documenta `ruff check .` y `ruff format --check .` como gates obligatorios desde el Sprint 1, pero `ruff` nunca estuvo en `requirements.txt` ni instalado en el contenedor — el comando fallaba con `executable file not found`. Al instalarlo (mismo fix que GAP-9) y correrlo por primera vez contra todo `backend/`, sin ningún `pyproject.toml`/`ruff.toml` en el repo, reportó **170 errores** (152 de ellos `RUF012`, una regla pensada para anotar `ClassVar` en atributos mutables de clase que genera falsos positivos masivos sobre los `Meta.fields = [...]` idiomáticos de Django/DRF) y **48 archivos** sin pasar por `ruff format` nunca.
+
+**Resolución aplicada:** se creó `backend/pyproject.toml` fijando explícitamente `select = ["E", "F", "W", "I"]` (pycodestyle, pyflakes, warnings, isort) en vez de depender de los defaults no documentados de la versión de `ruff` instalada — deja 7 errores reales (imports sin usar/desordenados), corregidos con `ruff check --fix`. Se ejecutó `ruff format .` una sola vez sobre todo el backend (48 archivos, solo cambios mecánicos de espaciado) para dejar el árbol conforme al gate documentado. `ruff check .` y `ruff format --check .` quedan en verde.
+
+---
+
+### GAP-15 — `/reportes` permitía Agente Aduanal en el frontend pero el backend siempre lo rechazaba
+
+| Campo | Valor |
+|-------|-------|
+| **Severidad** | 🟢 Bajo |
+| **Detectado** | 2026-09-02 (Sprint 4, S4-T01) |
+| **Propietario** | Oscar |
+| **Estado** | ✅ Resuelto (2026-09-02) |
+
+**Descripción:** `REPORTES_ROLES` en `backend/apps/reportes/views.py` (desde Sprint 2/Fase 4) nunca incluyó a `Agente Aduanal`, pero tanto la ruta de `App.tsx` como el ítem de sidebar de `AppLayout.tsx` sí lo dejaban entrar a `/reportes` — un Agente Aduanal veía la vista cargar y luego recibía un 403 de la API en cada request. Detectado al construir la vista real de Sprint 4 (antes era invisible porque la ruta era un `ModulePlaceholder` que no llamaba a la API).
+
+**Resolución aplicada:** se quitó `Agente Aduanal` de `allowedRoles` en la ruta `reportes` de `App.tsx` y del ítem de sidebar correspondiente en `AppLayout.tsx`, alineándolos con `REPORTES_ROLES` del backend (Administrador, Operador de Comercio Exterior, Contabilidad).
 
 ---
 
@@ -249,3 +292,9 @@ Verificado end-to-end: `curl -I http://localhost/media/.../archivo.pdf` → `200
 | 2026-08-30 | — | `Select` con `value={x \|\| undefined}` alternaba entre no-controlado/controlado (warning de React) en `Documentos.tsx`, `Costeo.tsx`, `NuevaImportacion.tsx` — unificado a `value={x}` siempre string | Shirley |
 | 2026-08-30 | — | Botones con `render={<a>/<Link>}` sin `nativeButton={false}` disparaban warning de accesibilidad de base-ui | Shirley |
 | 2026-08-30 | — | `formatDate()` corría un día hacia atrás las fechas puras `YYYY-MM-DD` en zonas horarias negativas (America/La_Paz) por interpretarlas como medianoche UTC — afectaba fechas en toda la app, no solo Sprint 2 | Shirley |
+| 2026-09-02 | GAP-1 | `/reportes` y `/auditoria` implementados (S4-T01/T02/T03) — no quedan `ModulePlaceholder` en el frontend | Oscar |
+| 2026-09-02 | GAP-5 | `apps/reportes/tests.py` ampliado con 9 tests de agregación y filtros (S4-T06) | Shirley |
+| 2026-09-02 | GAP-9 | `pytest`/`pytest-django`/`coverage` agregados a `requirements.txt`; imagen backend reconstruida | Oscar |
+| 2026-09-02 | GAP-10 | Corregida la URL del test (`/clientes/` → `/clientes-mayoristas/`) — no era un bug de la API | Oscar |
+| 2026-09-02 | GAP-14 | `ruff` agregado a `requirements.txt` + `backend/pyproject.toml` con ruleset explícito; 170 errores → 0, 48 archivos reformateados | Oscar |
+| 2026-09-02 | GAP-15 | `/reportes` alineado entre frontend y backend — se quitó `Agente Aduanal` de `allowedRoles` (el backend nunca lo permitió) | Oscar |

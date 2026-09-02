@@ -5,6 +5,7 @@ Los valores sensibles o dependientes del entorno (claves, hosts, credenciales
 de base de datos) NUNCA se escriben aquí de forma literal: se leen desde
 variables de entorno mediante django-environ.
 """
+
 from pathlib import Path
 
 import environ
@@ -127,8 +128,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Trendy Import API",
     "DESCRIPTION": (
-        "API REST del sistema de importación mayorista de ropa de "
-        "tendencia juvenil femenina (Fase 4)."
+        "API REST del sistema de importación mayorista de ropa de tendencia juvenil femenina (Fase 4)."
     ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,

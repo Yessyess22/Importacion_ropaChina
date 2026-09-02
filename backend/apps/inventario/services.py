@@ -2,6 +2,7 @@
 (sección 22 del encargo): ningún serializer/view de otra app debe tocar
 ese campo directamente, siempre pasa por aquí.
 """
+
 from django.db import transaction
 
 from config.exceptions import ConflictError

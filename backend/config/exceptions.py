@@ -32,8 +32,7 @@ def custom_exception_handler(exc, context):
         return Response(
             {
                 "detail": (
-                    "No se puede eliminar: existen registros relacionados "
-                    "que dependen de este recurso."
+                    "No se puede eliminar: existen registros relacionados que dependen de este recurso."
                 )
             },
             status=status.HTTP_409_CONFLICT,

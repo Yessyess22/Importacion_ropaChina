@@ -34,9 +34,7 @@ class VarianteProducto(models.Model):
         PUBLICADO = "PUBLICADO", "Publicado"
         DESCONTINUADO = "DESCONTINUADO", "Descontinuado"
 
-    prenda = models.ForeignKey(
-        Prenda, on_delete=models.PROTECT, related_name="variantes"
-    )
+    prenda = models.ForeignKey(Prenda, on_delete=models.PROTECT, related_name="variantes")
     talla = models.CharField(max_length=20)
     color = models.CharField(max_length=50)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
@@ -47,9 +45,7 @@ class VarianteProducto(models.Model):
             "MovimientoInventario. No editar directamente salvo ajuste controlado."
         ),
     )
-    estado = models.CharField(
-        max_length=20, choices=Estado.choices, default=Estado.BORRADOR
-    )
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.BORRADOR)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,9 +54,7 @@ class VarianteProducto(models.Model):
         verbose_name_plural = "Variantes de producto"
         ordering = ["prenda", "talla", "color"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["prenda", "talla", "color"], name="unique_variante_por_prenda"
-            )
+            models.UniqueConstraint(fields=["prenda", "talla", "color"], name="unique_variante_por_prenda")
         ]
         indexes = [models.Index(fields=["estado"])]
 

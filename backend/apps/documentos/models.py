@@ -19,9 +19,7 @@ class Documento(models.Model):
         CERTIFICADO_ORIGEN = "CERTIFICADO_ORIGEN", "Certificado de origen"
         OTRO = "OTRO", "Otro"
 
-    operacion = models.ForeignKey(
-        OperacionImportacion, on_delete=models.CASCADE, related_name="documentos"
-    )
+    operacion = models.ForeignKey(OperacionImportacion, on_delete=models.CASCADE, related_name="documentos")
     tipo = models.CharField(max_length=25, choices=Tipo.choices)
     nombre = models.CharField(max_length=150, blank=True)
     archivo = models.FileField(upload_to="documentos/%Y/%m/", blank=True, null=True)

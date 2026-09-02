@@ -128,7 +128,7 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Reportes',
     href: '/reportes',
     icon: BarChart3,
-    allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Agente Aduanal', 'Contabilidad'],
+    allowedRoles: ['Administrador', 'Operador de Comercio Exterior', 'Contabilidad'],
   },
   {
     label: 'Bitácora',

@@ -54,7 +54,7 @@ class ClienteMayoristaApiTests(TestCase):
 
     def test_cliente_consulta_su_propio_registro(self):
         self.client.login(username="user_a", password=self.password)
-        response = self.client.get("/api/v1/clientes/")
+        response = self.client.get("/api/v1/clientes-mayoristas/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["nit"], "CLI-A")

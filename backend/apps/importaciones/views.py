@@ -103,7 +103,5 @@ class DetalleImportacionViewSet(viewsets.ModelViewSet):
             OperacionImportacion.Estado.LIBERADA,
             OperacionImportacion.Estado.CANCELADA,
         ):
-            raise ConflictError(
-                "No se puede eliminar un detalle de una operación liberada o cancelada."
-            )
+            raise ConflictError("No se puede eliminar un detalle de una operación liberada o cancelada.")
         instance.delete()

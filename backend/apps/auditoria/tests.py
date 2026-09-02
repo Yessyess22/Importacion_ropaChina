@@ -2,13 +2,16 @@
 Suite de pruebas unitarias — S1-T10 / GAP-4
 Cubre el servicio registrar() y los invariantes del modelo Bitacora.
 """
+
 import pytest
 from django.test import TestCase
+from rest_framework.test import APIClient
 
 from apps.auditoria.models import Bitacora
 from apps.auditoria.services import registrar
 from apps.terceros.models import Proveedor
-from apps.usuarios.models import Usuario
+from apps.usuarios.models import Rol, Usuario
+from apps.usuarios.permissions import Roles
 
 
 class RegistrarCreacionCorrectaTest(TestCase):
@@ -136,6 +139,58 @@ class RelacionGenericaContentTypesTest(TestCase):
         self.assertIsNone(entrada.entidad_content_type)
         self.assertIsNone(entrada.entidad_object_id)
         self.assertIsNone(entrada.entidad_afectada)
+
+
+class BitacoraApiTests(TestCase):
+    """S4-T03/S4-T06: cobertura del endpoint `GET /api/v1/bitacora/`."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.password = "Clave-Segura123"
+        rol_admin, _ = Rol.objects.get_or_create(nombre=Roles.ADMINISTRADOR)
+        rol_operador, _ = Rol.objects.get_or_create(nombre=Roles.OPERADOR_COMERCIO_EXTERIOR)
+        self.admin = Usuario.objects.create_user(username="admin_bit", password=self.password, rol=rol_admin)
+        self.operador = Usuario.objects.create_user(
+            username="operador_bit", password=self.password, rol=rol_operador
+        )
+
+        registrar(usuario=self.admin, accion="PROVEEDOR_CREADO", detalle={"id": 1})
+        registrar(usuario=self.operador, accion="IMPORTACION_REGISTRADA", detalle={"id": 2})
+
+    def test_administrador_puede_listar_bitacora(self):
+        self.client.login(username="admin_bit", password=self.password)
+        response = self.client.get("/api/v1/bitacora/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_no_administrador_no_puede_listar_bitacora(self):
+        self.client.login(username="operador_bit", password=self.password)
+        response = self.client.get("/api/v1/bitacora/")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_filtro_por_usuario_devuelve_solo_sus_registros(self):
+        self.client.login(username="admin_bit", password=self.password)
+        response = self.client.get(f"/api/v1/bitacora/?usuario={self.operador.pk}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["accion"], "IMPORTACION_REGISTRADA")
+
+    def test_busqueda_por_texto_de_accion(self):
+        self.client.login(username="admin_bit", password=self.password)
+        response = self.client.get("/api/v1/bitacora/?search=PROVEEDOR")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["accion"], "PROVEEDOR_CREADO")
+
+    def test_endpoint_es_de_solo_lectura(self):
+        self.client.login(username="admin_bit", password=self.password)
+        response = self.client.post("/api/v1/bitacora/", {"accion": "X"})
+
+        self.assertEqual(response.status_code, 405)
 
 
 # ---------------------------------------------------------------------------

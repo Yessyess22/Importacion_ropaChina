@@ -34,7 +34,5 @@ class DocumentoViewSet(viewsets.ModelViewSet):
         # Una vez liberada la operación, sus documentos son el respaldo
         # legal de la importación (sección 54): ya no se eliminan.
         if instance.operacion.estado == OperacionImportacion.Estado.LIBERADA:
-            raise ConflictError(
-                "No se puede eliminar un documento de una operación ya liberada."
-            )
+            raise ConflictError("No se puede eliminar un documento de una operación ya liberada.")
         instance.delete()

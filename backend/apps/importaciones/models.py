@@ -22,9 +22,7 @@ class OperacionImportacion(models.Model):
         CANCELADA = "CANCELADA", "Cancelada"
 
     codigo_unico = models.CharField(max_length=30, unique=True)
-    proveedor = models.ForeignKey(
-        Proveedor, on_delete=models.PROTECT, related_name="operaciones_importacion"
-    )
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.PROTECT, related_name="operaciones_importacion")
     agente_aduanal = models.ForeignKey(
         AgenteAduanal,
         on_delete=models.PROTECT,
@@ -40,9 +38,7 @@ class OperacionImportacion(models.Model):
         blank=True,
     )
     fecha_registro = models.DateField()
-    estado = models.CharField(
-        max_length=20, choices=Estado.choices, default=Estado.REGISTRADA
-    )
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.REGISTRADA)
     valor_fob = models.DecimalField(max_digits=12, decimal_places=2)
     valor_flete = models.DecimalField(max_digits=12, decimal_places=2)
     valor_seguro = models.DecimalField(max_digits=12, decimal_places=2)
@@ -76,9 +72,7 @@ class DetalleImportacion(models.Model):
     una única importación para siempre.
     """
 
-    operacion = models.ForeignKey(
-        OperacionImportacion, on_delete=models.CASCADE, related_name="detalles"
-    )
+    operacion = models.ForeignKey(OperacionImportacion, on_delete=models.CASCADE, related_name="detalles")
     variante = models.ForeignKey(
         VarianteProducto, on_delete=models.PROTECT, related_name="detalles_importacion"
     )
@@ -89,9 +83,7 @@ class DetalleImportacion(models.Model):
         verbose_name = "Detalle de importación"
         verbose_name_plural = "Detalles de importación"
         constraints = [
-            models.UniqueConstraint(
-                fields=["operacion", "variante"], name="unique_variante_por_operacion"
-            )
+            models.UniqueConstraint(fields=["operacion", "variante"], name="unique_variante_por_operacion")
         ]
 
     def __str__(self) -> str:

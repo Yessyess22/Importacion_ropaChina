@@ -3,12 +3,10 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from rest_framework import viewsets
 
 from .models import Usuario
 from .serializers import LoginSerializer, UsuarioListSerializer, UsuarioMeSerializer, UsuarioWriteSerializer
@@ -35,9 +33,7 @@ class LoginView(APIView):
             password=serializer.validated_data["password"],
         )
         if user is None:
-            return Response(
-                {"detail": "Credenciales inválidas."}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "Credenciales inválidas."}, status=status.HTTP_400_BAD_REQUEST)
 
         django_login(request, user)
         return Response({"user": UsuarioMeSerializer(user).data})
@@ -88,9 +84,11 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         from apps.usuarios.permissions import Roles
+
         user = self.request.user
         if not (user.rol_id and user.rol.nombre == Roles.ADMINISTRADOR):
             from rest_framework.exceptions import PermissionDenied
+
             raise PermissionDenied
         return Usuario.objects.select_related("rol").order_by("username")
 

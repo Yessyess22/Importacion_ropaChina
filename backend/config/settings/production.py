@@ -5,6 +5,7 @@ Se deja preparada para fases futuras. No se activa en Fase 1: el proyecto
 se ejecuta con config.settings.development por defecto (ver manage.py y
 docker-compose.yml).
 """
+
 from .base import *  # noqa: F401,F403
 from .base import env
 

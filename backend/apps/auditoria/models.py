@@ -28,9 +28,7 @@ class Bitacora(models.Model):
     )
     usuario_repr = models.CharField(max_length=150, blank=True)
     accion = models.CharField(max_length=100)
-    entidad_content_type = models.ForeignKey(
-        ContentType, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    entidad_content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     entidad_object_id = models.PositiveBigIntegerField(null=True, blank=True)
     entidad_afectada = GenericForeignKey("entidad_content_type", "entidad_object_id")
     detalle = models.JSONField(blank=True, default=dict)

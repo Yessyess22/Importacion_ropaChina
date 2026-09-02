@@ -41,9 +41,21 @@ class OperacionImportacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = OperacionImportacion
         fields = [
-            "id", "codigo_unico", "proveedor", "agente_aduanal", "transportista",
-            "fecha_registro", "estado", "valor_fob", "valor_flete", "valor_seguro",
-            "valor_cif", "ruta_ingreso", "created_at", "updated_at", "detalles",
+            "id",
+            "codigo_unico",
+            "proveedor",
+            "agente_aduanal",
+            "transportista",
+            "fecha_registro",
+            "estado",
+            "valor_fob",
+            "valor_flete",
+            "valor_seguro",
+            "valor_cif",
+            "ruta_ingreso",
+            "created_at",
+            "updated_at",
+            "detalles",
         ]
         # `estado` solo cambia vía la acción `actualizar-estado` (RF-07);
         # `valor_cif` SIEMPRE lo calcula `services.calcular_cif` (RF-04):

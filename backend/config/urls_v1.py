@@ -5,6 +5,7 @@ archivo solo las agrega bajo el prefijo de versión, para poder introducir
 `/api/v2/` en el futuro (Fase 5+) sin tocar las apps ni romper clientes
 que sigan consumiendo v1 (sección 7 del encargo).
 """
+
 from django.urls import include, path
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path("", include("apps.inventario.urls")),
     path("", include("apps.pedidos.urls")),
     path("", include("apps.reportes.urls")),
+    path("", include("apps.auditoria.urls")),
 ]

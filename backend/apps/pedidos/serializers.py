@@ -36,8 +36,14 @@ class PedidoMayoristaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PedidoMayorista
         fields = [
-            "id", "codigo_pedido", "cliente", "fecha", "estado",
-            "created_at", "updated_at", "detalles",
+            "id",
+            "codigo_pedido",
+            "cliente",
+            "fecha",
+            "estado",
+            "created_at",
+            "updated_at",
+            "detalles",
         ]
         read_only_fields = fields
 

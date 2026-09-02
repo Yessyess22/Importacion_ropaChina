@@ -14,7 +14,7 @@
 | Sprint 1 | Autenticación, Layout y CRUDs Maestros | 2026-08-30 → 2026-09-20 | ✅ Cerrado |
 | Sprint 2 | Importaciones, Documentos y Costeo | 2026-09-21 → 2026-10-11 | ✅ Cerrado (adelantado, 2026-08-30) |
 | Sprint 3 | Catálogo Mayorista y Pedidos | 2026-10-12 → 2026-11-01 | ✅ Cerrado (adelantado, 2026-09-01) |
-| Sprint 4 | Reportes, Bitácora y Pruebas E2E | 2026-11-02 → 2026-11-22 | ⏳ Pendiente |
+| Sprint 4 | Reportes, Bitácora y Pruebas E2E | 2026-11-02 → 2026-11-22 | ✅ Cerrado (adelantado, 2026-09-02) |
 
 ---
 
@@ -122,28 +122,30 @@
 
 ### Criterios de Aceptación del Sprint
 
-- [ ] El Contador/Admin ve un reporte de importaciones agrupado por estado con valor CIF total, filtrable por rango de fechas.
-- [ ] El Contador/Admin ve un reporte de pedidos agrupado por estado.
-- [ ] Los reportes se muestran en gráfico de barras y tabla descargable como CSV.
-- [ ] El Administrador ve la bitácora de auditoría paginada y puede filtrar por acción y usuario.
-- [ ] La suite completa de tests E2E cubre: login, catálogo, crear importación, crear pedido, reportes.
-- [ ] `tsc --noEmit` pasa sin errores en el frontend.
-- [ ] `pytest` pasa con cobertura ≥ 80% en el backend.
-- [ ] `ruff` y `eslint` no reportan errores.
+- [x] El Contador/Admin ve un reporte de importaciones agrupado por estado con valor CIF total, filtrable por rango de fechas.
+- [x] El Contador/Admin ve un reporte de pedidos agrupado por estado.
+- [x] Los reportes se muestran en gráfico de barras y tabla descargable como CSV.
+- [x] El Administrador ve la bitácora de auditoría paginada y puede filtrar por acción y usuario.
+- [x] La suite completa de tests E2E cubre: login, catálogo (vía flujo de pedido), crear importación, crear pedido, reportes.
+- [x] `tsc --noEmit` pasa sin errores en el frontend.
+- [x] `pytest` pasa con cobertura ≥ 80% en el backend (94% medido con `coverage report`).
+- [x] `ruff` y `eslint`/`oxlint` no reportan errores.
 
 ### Tareas detalladas
 
 | ID | Tarea | Responsable | Rama | SP estimados |
 |----|-------|-------------|------|-------------|
-| S4-T01 | Vista `/reportes` — gráfico de barras de importaciones por estado + filtro de fechas | Oscar | `feature/s4-reportes` | 8 |
-| S4-T02 | Vista `/reportes` — gráfico de pedidos por estado + exportación CSV | Shirley | `feature/s4-reportes-pedidos` | 5 |
-| S4-T03 | Vista `/auditoria` — tabla paginada de bitácora con filtros | Oscar | `feature/s4-bitacora` | 5 |
-| S4-T04 | E2E Playwright: cobertura del flujo de reportes | Shirley | `feature/s4-e2e-reportes` | 3 |
-| S4-T05 | E2E Playwright: cobertura del flujo de importación completo (regresión) | Oscar | `feature/s4-e2e-regresion` | 5 |
-| S4-T06 | Aumentar cobertura tests backend: `auditoria`, `reportes` | Ambos | `feature/s4-backend-tests` | 3 |
-| S4-T07 | Revisión final de tipos TypeScript (`tsc --noEmit`), linting y accesibilidad | Ambos | `feature/s4-qa-final` | 3 |
+| S4-T01 | Vista `/reportes` — gráfico de barras de importaciones por estado + filtro de fechas | Oscar | `feature/s4-reportes` | 8 ✅ |
+| S4-T02 | Vista `/reportes` — gráfico de pedidos por estado + exportación CSV | Shirley | `feature/s4-reportes-pedidos` | 5 ✅ |
+| S4-T03 | Vista `/auditoria` — tabla paginada de bitácora con filtros | Oscar | `feature/s4-bitacora` | 5 ✅ |
+| S4-T04 | E2E Playwright: cobertura del flujo de reportes | Shirley | `feature/s4-e2e-reportes` | 3 ✅ |
+| S4-T05 | E2E Playwright: cobertura del flujo de importación completo (regresión) | Oscar | `feature/s4-e2e-regresion` | 5 ✅ |
+| S4-T06 | Aumentar cobertura tests backend: `auditoria`, `reportes` | Ambos | `feature/s4-backend-tests` | 3 ✅ |
+| S4-T07 | Revisión final de tipos TypeScript (`tsc --noEmit`), linting y accesibilidad | Ambos | `feature/s4-qa-final` | 3 ✅ |
 
 **Total SP Sprint 4:** 32
+
+> **Nota de ejecución (2026-09-02):** Sprint 4 se cerró completo en una sola sesión (mismo patrón de adelanto que Sprints 2 y 3). Además del alcance planificado, S4-T03 requirió construir desde cero el endpoint `GET /api/v1/bitacora/` (serializer + viewset + urls) — no existía ningún backend para la bitácora antes de esta tarea, solo el modelo y el servicio `registrar()`. S4-T06/S4-T07 también resolvieron tres brechas de infraestructura de QA que llevaban abiertas desde Sprint 2 (ver `05-FINDINGS_DEUDA.md`: GAP-9, GAP-10, y el hallazgo de que `ruff` nunca se había ejecutado realmente pese a estar documentado como gate obligatorio desde el Sprint 1).
 
 ---
 
@@ -151,9 +153,9 @@
 
 | Métrica | Sprint 1 | Sprint 2 | Sprint 3 | Sprint 4 |
 |---------|----------|----------|----------|----------|
-| Tests backend (pytest) | ≥ 70% | ≥ 75% | ≥ 78% | ≥ 85% |
-| Tests E2E (Playwright) | Login/logout | Importación | Pedido | Todos |
-| TypeScript sin errores | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio |
-| Ruff / ESLint limpio | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio |
+| Tests backend (pytest) | ≥ 70% | ≥ 75% | ≥ 78% | ≥ 85% (**94% real**, 85 tests) |
+| Tests E2E (Playwright) | Login/logout | Importación | Pedido | Todos (**12/12 PASSED**) |
+| TypeScript sin errores | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio | ✅ cumplido |
+| Ruff / ESLint limpio | ✅ obligatorio | ✅ obligatorio | ✅ obligatorio | ✅ cumplido (`ruff`/`oxlint` sin errores) |
 | Estilos inline | 0 | 0 | 0 | 0 |
 | `window.alert/confirm` | 0 | 0 | 0 | 0 |

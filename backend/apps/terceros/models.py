@@ -88,9 +88,7 @@ class Transportista(Tercero):
         AEREO = "AEREO", "Aéreo"
         TERRESTRE = "TERRESTRE", "Terrestre"
 
-    tipo_transporte = models.CharField(
-        max_length=20, choices=TipoTransporte.choices, blank=True
-    )
+    tipo_transporte = models.CharField(max_length=20, choices=TipoTransporte.choices, blank=True)
 
     class Meta:
         verbose_name = "Transportista"

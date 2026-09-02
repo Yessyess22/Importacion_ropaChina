@@ -25,14 +25,10 @@ class MovimientoInventario(models.Model):
         SALIDA = "SALIDA", "Salida"
         AJUSTE = "AJUSTE", "Ajuste"
 
-    variante = models.ForeignKey(
-        VarianteProducto, on_delete=models.PROTECT, related_name="movimientos"
-    )
+    variante = models.ForeignKey(VarianteProducto, on_delete=models.PROTECT, related_name="movimientos")
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     cantidad = models.IntegerField()
-    origen_content_type = models.ForeignKey(
-        ContentType, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    origen_content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     origen_object_id = models.PositiveBigIntegerField(null=True, blank=True)
     origen = GenericForeignKey("origen_content_type", "origen_object_id")
     observacion = models.CharField(max_length=255, blank=True)

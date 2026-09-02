@@ -7,6 +7,7 @@ código de negocio qué se audita y con qué detalle, en vez de acoplar
 todas las apps a un mecanismo implícito. Nunca se registra información
 sensible (contraseñas, tokens) en `detalle`.
 """
+
 from django.contrib.contenttypes.models import ContentType
 
 from .models import Bitacora

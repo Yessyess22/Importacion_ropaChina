@@ -6,13 +6,13 @@ usuario de desarrollo se toma de la variable de entorno
 DJANGO_DEV_ADMIN_PASSWORD (nunca se hardcodea ni se sube a Git); si no se
 define, se genera una aleatoria y se imprime una sola vez en consola.
 """
+
 import os
 import secrets
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-
 
 ROLES = [
     "Administrador",
@@ -47,9 +47,7 @@ class Command(BaseCommand):
                 username="admin", email="admin@example.com", password=password, rol=rol_admin
             )
             self.stdout.write(
-                self.style.WARNING(
-                    f"Usuario de desarrollo creado -> username: admin / password: {password}"
-                )
+                self.style.WARNING(f"Usuario de desarrollo creado -> username: admin / password: {password}")
             )
         else:
             self.stdout.write("Usuario 'admin' ya existe, no se modifica.")
@@ -179,9 +177,7 @@ class Command(BaseCommand):
                     color=color,
                     defaults={"precio_unitario": Decimal(precio)},
                 )
-                VarianteProducto.objects.filter(pk=variante.pk).update(
-                    estado=estado, stock_disponible=stock
-                )
+                VarianteProducto.objects.filter(pk=variante.pk).update(estado=estado, stock_disponible=stock)
 
         self.stdout.write(
             self.style.SUCCESS(
