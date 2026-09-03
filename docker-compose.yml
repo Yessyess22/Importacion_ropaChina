@@ -51,6 +51,7 @@ services:
     build:
       context: .
       dockerfile: docker/frontend/Dockerfile
+      network: host
     container_name: trendy_frontend
     ports:
       - "5173:5173"
